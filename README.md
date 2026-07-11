@@ -6,7 +6,9 @@ See `docs/07_START_HERE_SETUP_GUIDE.md` for setup and the weekly workflow, and `
 
 ## Status
 
-**Milestone M1, Step 1 complete:** repository scaffold. All modules are documented stubs; each says which step implements it. Next: Step 2 — database migrations (dbmate) against Supabase.
+**Milestone M1, Step 2 complete:** database schema (dbmate migrations for `sources`,
+`items`, `digests`, `scores`, `digest_items`, `feedback`, `eval_labels`). Next: Step 3 —
+`pipeline/ingest/pubmed.py`.
 
 ## Local development
 
@@ -14,7 +16,14 @@ See `docs/07_START_HERE_SETUP_GUIDE.md` for setup and the weekly workflow, and `
 uv sync          # install dependencies (installs Python 3.12 if needed)
 make doctor      # sanity check — fails if an ANTHROPIC_API_KEY is present
 make test        # run the test suite
+make migrate     # apply db/migrations to $DATABASE_URL (installs dbmate if missing)
 ```
+
+## Database
+
+Schema lives in `db/migrations/` as plain, ordered dbmate SQL files; `db/schema.sql` is
+the generated snapshot (do not hand-edit it — `make migrate` regenerates it). To change
+the schema: add a new numbered migration file, never edit a merged one.
 
 ## Commands
 
@@ -23,7 +32,7 @@ make test        # run the test suite
 | `make setup` | install dependencies | now |
 | `make doctor` | environment + billing-guardrail check | now |
 | `make test` | run tests | now |
-| `make migrate` | apply database migrations | Step 2 |
+| `make migrate` | apply database migrations | now |
 | `make ingest` | run one day's ingestion locally | Step 5 |
 | `make backfill DAYS=90` | supervised historical backfill | Step 5 |
 | `make eval` | score the labeled eval set (run in a Claude Code session) | M2 |
