@@ -16,8 +16,9 @@ doctor:  ## Environment sanity check — MUST fail if an Anthropic API key is pr
 		exit 1; \
 	fi
 	@command -v uv >/dev/null || { echo "FAIL: uv not installed (https://docs.astral.sh/uv/)"; exit 1; }
-	@command -v dbmate >/dev/null || echo "note: dbmate not installed — needed from Step 2 (migrations)"
-	@[ -n "$$DATABASE_URL" ] || echo "note: DATABASE_URL not set — needed from Step 2 (database access)"
+	@command -v dbmate >/dev/null || [ -x "$$(go env GOPATH 2>/dev/null)/bin/dbmate" ] || \
+		echo "note: dbmate not found — 'make migrate' will try to install it via 'go install'"
+	@[ -n "$$DATABASE_URL" ] || echo "note: DATABASE_URL not set — needed for migrate/ingest"
 	@echo "doctor: OK — no Anthropic API key present; core tooling available."
 
 test:  ## Run the test suite
@@ -31,8 +32,21 @@ ingest:  ## Run today's ingestion locally (supports DRY_RUN=1) — Step 5
 backfill:  ## Backfill the last DAYS=90 days, supervised — Step 5
 	@echo "Not implemented until M1 Step 5 (supervised 90-day backfill)."; exit 1
 
-migrate:  ## Apply dbmate migrations to DATABASE_URL — Step 2
-	@echo "Not implemented until M1 Step 2 (dbmate migrations)."; exit 1
+migrate:  ## Apply db/migrations to DATABASE_URL via dbmate (installs dbmate if missing)
+	@[ -n "$$DATABASE_URL" ] || { echo "FAIL: DATABASE_URL is not set."; exit 1; }
+	@export PATH="$$PATH:$$(go env GOPATH 2>/dev/null)/bin"; \
+	if ! command -v dbmate >/dev/null 2>&1; then \
+		if command -v go >/dev/null 2>&1; then \
+			echo "dbmate not found — installing via 'go install' (one-time, ~30s)..."; \
+			go install github.com/amacneil/dbmate/v2@latest; \
+		else \
+			echo "FAIL: dbmate not found and no Go toolchain to install it."; \
+			echo "      Fallback: paste the migrate:up blocks from db/migrations/*.sql, in"; \
+			echo "      filename order, into the Supabase SQL Editor instead."; \
+			exit 1; \
+		fi; \
+	fi; \
+	dbmate --no-dump-schema up
 
 eval:  ## Score the labeled eval set; report recall/agreement/confusion — M2
 	@echo "Not implemented until Milestone M2 (evalset/run_eval.py)."; exit 1
