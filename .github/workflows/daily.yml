@@ -1,0 +1,29 @@
+# The daily robot: ingest → normalize/dedupe → pre-filter → OA enrichment (docs/02 §1).
+# No LLM, no Anthropic key — this workflow only fills the database.
+#
+# SKELETON — the schedule below stays COMMENTED OUT until M1 Step 5 wires the real
+# pipeline; until then this workflow can only be run manually (workflow_dispatch)
+# and will exit with a clear "not implemented" message.
+name: daily-ingest
+
+on:
+  workflow_dispatch:
+  # Enabled in M1 Step 5. 05:00 America/Chicago is 10:00 UTC during CDT
+  # (11:00 UTC during CST; GitHub cron is UTC-only — we accept the DST hour drift).
+  # schedule:
+  #   - cron: "0 10 * * *"
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install dependencies
+        run: uv sync
+      - name: Run daily pipeline
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NCBI_API_KEY: ${{ secrets.NCBI_API_KEY }}
+          UNPAYWALL_EMAIL: ${{ secrets.UNPAYWALL_EMAIL }}
+        run: uv run python -m pipeline.run_daily

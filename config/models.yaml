@@ -1,0 +1,19 @@
+# config/models.yaml — the ONE place model names live (CLAUDE.md rule 4).
+#
+# These select which model the interactive /digest session uses per phase
+# (docs/02 §5). No API key exists in this project; these names are what the
+# session switches to (e.g. via /model), and what gets recorded on score rows
+# as "claude-code-session/<model>".
+#
+# Model-upgrade ritual (PRD Flow D): change a line here → run `make eval` →
+# compare vs. the last report → commit if better.
+
+phases:
+  triage:
+    model: sonnet     # mid-tier: high-volume batched scoring, conserves Pro limits
+  synthesis:
+    model: opus       # strongest available in the session picker; reasoning quality shows here
+  deep_dive:
+    model: opus
+  eval:
+    model: sonnet     # must match triage so eval measures what production does

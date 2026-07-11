@@ -1,0 +1,33 @@
+{#
+  digest.html.j2 — the weekly email, V1's only UI (PRD §6).
+  SKELETON — filled in Milestone M3.
+
+  Design rules (binding, PRD §6): single column, no images, no hero banners,
+  renders in plain-text-ish HTML, dark-mode safe. The screened→surfaced ratio
+  in the footer is the product's honesty metric and appears every week.
+#}
+<html>
+<body style="max-width: 640px; margin: 0 auto; font-family: Georgia, serif;">
+
+  <h1>ANESTHESIA INTELLIGENCE — {{ digest_date }}</h1>
+  <p><em>Week in brief:</em> {{ week_in_brief }}</p>
+
+  {# ■ PRACTICE-CHANGING (≤5): title→PubMed link · journal · design/n · date ·
+     2–4 sentence synthesis, key caveat last · "Free full text" link when oa_url ·
+     4 feedback links (Useful / Not relevant / Knew it / Deep-dive), HMAC-signed. #}
+  {# TODO M3: practice_changing block #}
+
+  {# ■ WORTH KNOWING (≤12): same layout, tighter. #}
+  {# TODO M3: worth_knowing block #}
+
+  {# ■ FYI (≤15): title + one line each. #}
+  {# TODO M3: fyi block #}
+
+  <hr>
+  <p style="font-size: small;">
+    Pipeline health: {{ health_line }} · {{ screened_count }} items screened ·
+    {{ surfaced_count }} surfaced ({{ surfaced_pct }}%)
+  </p>
+
+</body>
+</html>

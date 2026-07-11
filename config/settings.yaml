@@ -1,0 +1,21 @@
+# config/settings.yaml — caps, schedule, and budget knobs (docs/02 §2).
+# Editable without touching code.
+
+digest:
+  # Hard caps per tier (PRD FR-3). Exceeding a cap means DEMOTING, not expanding.
+  caps:
+    practice_changing: 5
+    worth_knowing: 12
+    fyi: 15
+  # Recipient/sender are configured at send time from environment, never stored here.
+
+ingestion:
+  # GitHub Actions cron target (documented here; the actual cron line lives in
+  # .github/workflows/daily.yml and is enabled in M1 Step 5).
+  daily_run_local_time: "05:00 America/Chicago"
+
+budget:
+  # Knobs that protect the weekly Pro session (docs/02 §3). Tune these — not code —
+  # if a Monday session ever pinches limits.
+  triage_batch_size: 25
+  max_items_per_week_to_llm: 300

@@ -1,0 +1,21 @@
+# config/filters.yaml — the free, deterministic pre-filter (docs/02 §3).
+# SKELETON: structure only. Rules populated and tuned in M1 Step 4 / M2.
+#
+# Purpose: cut ~300–800 weekly items down to ~100–300 before any LLM sees them,
+# protecting the founder's Pro subscription limits. Dropped items are stored and
+# marked with the rule that dropped them — never deleted (auditable, re-scorable).
+
+tier_a_journals: []
+  # Copied from PRACTICE_PROFILE.md §8 in Step 4. Tier A ALWAYS passes to LLM triage
+  # and is never auto-noised (PRD §9 risk table).
+
+tier_b_keywords: []
+  # Standing-question / topic keywords from PRACTICE_PROFILE.md §4–5. A Tier B journal
+  # item (i.e., any journal not in tier_a_journals, including surgical literature)
+  # passes only on a keyword match.
+
+hard_drops:
+  # Each rule gets a name; that name is written to items.prefilter for the audit trail.
+  item_types: []              # e.g. erratum, letter (unless linked to a flagged trial)
+  retrospective_n_below: 30   # per PRACTICE_PROFILE.md §6 — intentionally permissive
+  animal_bench: keyword_tied  # drop unless keyword-tied to a standing question
