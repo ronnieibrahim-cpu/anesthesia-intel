@@ -1,0 +1,23 @@
+# config/sources.yaml — what the daily ingestion robot reads.
+# SKELETON: structure only. Populated in M1 Step 3 from PRACTICE_PROFILE.md §8
+# (Tier A journal allowlist) + standing-question keywords (§4).
+#
+# Editable without touching code. Abstracts + metadata only — never full-text scraping
+# (CLAUDE.md rule 2).
+
+pubmed:
+  # NCBI E-utilities search strategy. Built in Step 3.
+  # api_key comes from the NCBI_API_KEY environment variable, never from this file.
+  journal_allowlist: []       # ~25 Tier A journals, e.g. "Anesthesiology", "NEJM"
+  topic_queries: []           # MeSH/keyword queries for standing questions,
+                              # e.g. "GLP-1 receptor agonist AND perioperative"
+  lookback_days_default: 3    # daily overlap window; dedupe makes re-reads safe
+
+fda:
+  # MedWatch safety alerts + drug safety communication feeds. Built in Step 4.
+  feeds: []                   # feed URLs
+
+society_feeds:
+  # RSS/HTML change detection only: "a new/updated guideline appeared" (PRD FR-1).
+  # Shortlist per PRD: ASA, ASRA, SCA, ESAIC, SAMBA, ACC/AHA guideline pages, SCCM.
+  feeds: []                   # {name, url, kind: rss|html_watch}

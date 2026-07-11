@@ -1,0 +1,30 @@
+[project]
+name = "anesthesia-intel"
+version = "0.1.0"
+description = "Personal literature-triage pipeline: daily ingestion, practice-profile scoring, weekly digest."
+requires-python = ">=3.12"
+dependencies = [
+    # Each dependency's one-paragraph tradeoff was approved with the M1 Step 1 plan
+    # (CLAUDE.md rule 8).
+    "psycopg[binary]>=3.2",   # Postgres access, plain SQL, no ORM (docs/02 §2)
+    "pyyaml>=6.0",            # config/ files
+    "jinja2>=3.1",            # templates/digest.html.j2
+    "httpx>=0.27",            # HTTP client for PubMed/FDA/Unpaywall (timeouts built in)
+    "feedparser>=6.0",        # society/FDA RSS feeds — the boring standard
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[tool.uv]
+package = false   # this is an application repo, not an installable library
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100

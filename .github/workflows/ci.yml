@@ -1,0 +1,22 @@
+# CI: tests + lint + billing guardrail on every push and PR (docs/02 §7, §8).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Install dependencies
+        run: uv sync
+      - name: Lint
+        run: uv run ruff check .
+      - name: Tests
+        run: uv run pytest
+      - name: Doctor (fails if an ANTHROPIC_API_KEY is ever configured)
+        run: make doctor
