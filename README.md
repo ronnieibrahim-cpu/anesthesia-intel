@@ -6,9 +6,10 @@ See `docs/07_START_HERE_SETUP_GUIDE.md` for setup and the weekly workflow, and `
 
 ## Status
 
-**Milestone M1, Step 2 complete:** database schema (dbmate migrations for `sources`,
-`items`, `digests`, `scores`, `digest_items`, `feedback`, `eval_labels`). Next: Step 3 —
-`pipeline/ingest/pubmed.py`.
+**Milestone M1, Step 3 complete:** PubMed ingester (`pipeline/ingest/pubmed.py`) driven by
+`config/sources.yaml` (Tier A journal allowlist + standing-question topic queries), with
+fixture-based tests and no live network calls. Next: Step 4 — `fda.py`, `rss.py`,
+`normalize.py` + dedupe, the pre-filter, and Unpaywall/PMC enrichment.
 
 ## Local development
 

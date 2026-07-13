@@ -1,0 +1,93 @@
+<?xml version="1.0" ?>
+<PubmedArticleSet>
+  <PubmedArticle>
+    <MedlineCitation Status="Publisher">
+      <PMID Version="1">40000001</PMID>
+      <Article PubModel="Print-Electronic">
+        <Journal>
+          <Title>The New England journal of medicine</Title>
+          <ISOAbbreviation>N Engl J Med</ISOAbbreviation>
+          <JournalIssue>
+            <PubDate>
+              <Year>2026</Year>
+              <Month>Jun</Month>
+              <Day>24</Day>
+            </PubDate>
+          </JournalIssue>
+        </Journal>
+        <ArticleTitle>Semaglutide and Residual Gastric Content Before Elective Surgery.</ArticleTitle>
+        <Abstract>
+          <AbstractText Label="BACKGROUND">GLP-1 receptor agonists delay gastric emptying.</AbstractText>
+          <AbstractText Label="METHODS">In this randomized trial, we assigned 1204 patients.</AbstractText>
+          <AbstractText Label="RESULTS">Residual gastric content was reduced with a 24-hour hold.</AbstractText>
+        </Abstract>
+        <PublicationTypeList>
+          <PublicationType UI="D016428">Journal Article</PublicationType>
+          <PublicationType UI="D016449">Randomized Controlled Trial</PublicationType>
+        </PublicationTypeList>
+        <ELocationID EIdType="doi" ValidYN="Y">10.1056/NEJMoa2400001</ELocationID>
+      </Article>
+    </MedlineCitation>
+    <PubmedData>
+      <ArticleIdList>
+        <ArticleId IdType="pubmed">40000001</ArticleId>
+        <ArticleId IdType="doi">10.1056/NEJMoa2400001</ArticleId>
+      </ArticleIdList>
+    </PubmedData>
+  </PubmedArticle>
+  <PubmedArticle>
+    <MedlineCitation Status="MEDLINE">
+      <PMID Version="1">40000002</PMID>
+      <Article PubModel="Print">
+        <Journal>
+          <Title>Anaesthesia</Title>
+          <ISOAbbreviation>Anaesthesia</ISOAbbreviation>
+          <JournalIssue>
+            <PubDate>
+              <MedlineDate>2026 Jun-Jul</MedlineDate>
+            </PubDate>
+          </JournalIssue>
+        </Journal>
+        <ArticleTitle>Intraoperative hypotension thresholds and acute kidney injury: a cohort study.</ArticleTitle>
+        <Abstract>
+          <AbstractText>A single unlabelled abstract paragraph describing the association.</AbstractText>
+        </Abstract>
+        <PublicationTypeList>
+          <PublicationType UI="D016428">Journal Article</PublicationType>
+        </PublicationTypeList>
+      </Article>
+    </MedlineCitation>
+    <PubmedData>
+      <ArticleIdList>
+        <ArticleId IdType="pubmed">40000002</ArticleId>
+      </ArticleIdList>
+    </PubmedData>
+  </PubmedArticle>
+  <PubmedArticle>
+    <MedlineCitation Status="Publisher">
+      <PMID Version="1">40000003</PMID>
+      <Article PubModel="Electronic">
+        <Journal>
+          <Title>British journal of anaesthesia</Title>
+          <ISOAbbreviation>Br J Anaesth</ISOAbbreviation>
+          <JournalIssue>
+            <PubDate>
+              <Year>2026</Year>
+              <Month>07</Month>
+            </PubDate>
+          </JournalIssue>
+        </Journal>
+        <ArticleTitle>Comment on: opioid-free anaesthesia claims revisited.</ArticleTitle>
+        <PublicationTypeList>
+          <PublicationType UI="D016422">Letter</PublicationType>
+        </PublicationTypeList>
+      </Article>
+    </MedlineCitation>
+    <PubmedData>
+      <ArticleIdList>
+        <ArticleId IdType="pubmed">40000003</ArticleId>
+        <ArticleId IdType="doi">10.1016/j.bja.2026.03.001</ArticleId>
+      </ArticleIdList>
+    </PubmedData>
+  </PubmedArticle>
+</PubmedArticleSet>

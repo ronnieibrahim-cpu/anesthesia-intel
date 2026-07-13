@@ -1,17 +1,117 @@
 # config/sources.yaml — what the daily ingestion robot reads.
-# SKELETON: structure only. Populated in M1 Step 3 from PRACTICE_PROFILE.md §8
-# (Tier A journal allowlist) + standing-question keywords (§4).
+# Editable without touching code. Abstracts + metadata only — never full-text
+# scraping (CLAUDE.md rule 2).
 #
-# Editable without touching code. Abstracts + metadata only — never full-text scraping
-# (CLAUDE.md rule 2).
+# PubMed section built in M1 Step 3 from PRACTICE_PROFILE.md §8 (Tier A journal
+# allowlist) + §4–5 (standing questions / controversies as topic queries).
+# The `fda:` and `society_feeds:` sections stay skeletons until M1 Step 4.
 
 pubmed:
-  # NCBI E-utilities search strategy. Built in Step 3.
-  # api_key comes from the NCBI_API_KEY environment variable, never from this file.
-  journal_allowlist: []       # ~25 Tier A journals, e.g. "Anesthesiology", "NEJM"
-  topic_queries: []           # MeSH/keyword queries for standing questions,
-                              # e.g. "GLP-1 receptor agonist AND perioperative"
-  lookback_days_default: 3    # daily overlap window; dedupe makes re-reads safe
+  # NCBI E-utilities. api_key comes from the NCBI_API_KEY env var, never this file.
+  eutils_base: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
+  tool: "anesthesia-intel"     # NCBI etiquette: identify the client
+  datetype: "pdat"             # 'pdat' = date of publication; 'edat' = date added to
+                               # PubMed. pdat matches the "published in the window"
+                               # mental model; switch to edat later if indexing lag
+                               # (PRD §9) starts hiding fresh items.
+  retmax: 500                  # max PMIDs per esearch; a wide net before pre-filter
+  lookback_days_default: 3     # daily overlap window; dedupe makes re-reads safe
+
+  # Tier A journals (PRACTICE_PROFILE.md §8) — always passed to LLM triage, never
+  # auto-noised. `ta` is the NLM Title Abbreviation used in PubMed's [ta] field.
+  # NOTE: APSF Newsletter is intentionally absent here — it is not MEDLINE-indexed;
+  # it is covered via society_feeds (RSS) in Step 4 instead.
+  journal_allowlist:
+    - {name: "New England Journal of Medicine", ta: "N Engl J Med"}
+    - {name: "JAMA", ta: "JAMA"}
+    - {name: "JAMA Surgery", ta: "JAMA Surg"}
+    - {name: "JAMA Internal Medicine", ta: "JAMA Intern Med"}
+    - {name: "The Lancet", ta: "Lancet"}
+    - {name: "BMJ", ta: "BMJ"}
+    - {name: "Anesthesiology", ta: "Anesthesiology"}
+    - {name: "British Journal of Anaesthesia", ta: "Br J Anaesth"}
+    - {name: "Anesthesia & Analgesia", ta: "Anesth Analg"}
+    - {name: "Anaesthesia", ta: "Anaesthesia"}
+    - {name: "Regional Anesthesia & Pain Medicine", ta: "Reg Anesth Pain Med"}
+    - {name: "European Journal of Anaesthesiology", ta: "Eur J Anaesthesiol"}
+    - {name: "Journal of Clinical Anesthesia", ta: "J Clin Anesth"}
+    - {name: "Pain", ta: "Pain"}
+    - {name: "Anesthesiology Clinics", ta: "Anesthesiol Clin"}
+    - {name: "Intensive Care Medicine", ta: "Intensive Care Med"}
+    - {name: "Critical Care Medicine", ta: "Crit Care Med"}
+    - {name: "Circulation", ta: "Circulation"}
+    - {name: "Journal of the American College of Cardiology", ta: "J Am Coll Cardiol"}
+
+  # Standing-question / controversy topic queries (PRACTICE_PROFILE.md §4–5). These
+  # run across ALL journals (incl. Tier B / surgical literature); the pre-filter
+  # (Step 4) then keeps only Tier A or keyword-matched Tier B. Each `query` is a raw
+  # PubMed search string — tune freely; [tiab] = title/abstract.
+  topic_queries:
+    - name: "GLP-1 receptor agonists, perioperative (PINNED)"
+      query: >-
+        ("glucagon-like peptide-1 receptor agonist"[tiab] OR "GLP-1"[tiab]
+        OR semaglutide[tiab] OR tirzepatide[tiab] OR liraglutide[tiab]
+        OR dulaglutide[tiab])
+        AND (perioperative[tiab] OR preoperative[tiab] OR anesth*[tiab]
+        OR anaesth*[tiab] OR aspiration[tiab] OR "gastric emptying"[tiab]
+        OR "residual gastric"[tiab] OR fasting[tiab] OR "gastric ultrasound"[tiab])
+    - name: "Perioperative cardiac workup and optimization"
+      query: >-
+        (perioperative[tiab] OR preoperative[tiab] OR "noncardiac surgery"[tiab]
+        OR "non-cardiac surgery"[tiab])
+        AND (cardiac[tiab] OR cardiovascular[tiab])
+        AND (risk[tiab] OR evaluation[tiab] OR optimization[tiab] OR workup[tiab]
+        OR "functional capacity"[tiab] OR biomarker*[tiab] OR troponin[tiab]
+        OR "stress test"[tiab] OR DASI[tiab])
+    - name: "Intraoperative blood pressure targets and organ protection"
+      query: >-
+        ("blood pressure"[tiab] OR hypotension[tiab] OR "mean arterial pressure"[tiab])
+        AND (intraoperative[tiab] OR perioperative[tiab])
+        AND (organ[tiab] OR "acute kidney injury"[tiab] OR kidney[tiab]
+        OR myocardial[tiab] OR outcome*[tiab])
+    - name: "Processed EEG / depth of anesthesia and postoperative delirium"
+      query: >-
+        ("processed electroencephalography"[tiab] OR "depth of anesthesia"[tiab]
+        OR bispectral[tiab] OR "BIS monitoring"[tiab] OR "EEG-guided"[tiab]
+        OR "burst suppression"[tiab])
+        AND (delirium[tiab] OR "neurocognitive"[tiab] OR cognitive[tiab]
+        OR anesth*[tiab])
+    - name: "Regional vs general anesthesia for hip fracture (post-REGAIN/RAGA)"
+      query: >-
+        ("hip fracture"[tiab] OR "hip surgery"[tiab] OR "hip arthroplasty"[tiab])
+        AND (regional[tiab] OR spinal[tiab] OR neuraxial[tiab]
+        OR "general anesthesia"[tiab] OR "general anaesthesia"[tiab])
+    - name: "TXA indication expansion"
+      query: >-
+        (tranexamic[tiab] OR "TXA"[tiab])
+        AND (surg*[tiab] OR perioperative[tiab] OR bleeding[tiab]
+        OR "blood loss"[tiab] OR transfusion[tiab])
+    - name: "Perioperative glycemic control"
+      query: >-
+        (glycemic[tiab] OR "glucose control"[tiab] OR hyperglycemia[tiab]
+        OR "blood glucose"[tiab])
+        AND (perioperative[tiab] OR intraoperative[tiab] OR surg*[tiab])
+    - name: "Opioid-free / opioid-sparing anesthesia"
+      query: >-
+        ("opioid-free"[tiab] OR "opioid free"[tiab] OR "opioid-sparing"[tiab]
+        OR "opioid sparing"[tiab])
+        AND (anesth*[tiab] OR anaesth*[tiab])
+    - name: "Perioperative beta-blockade"
+      query: >-
+        ("beta-blocker"[tiab] OR "beta blocker"[tiab] OR "beta-blockade"[tiab]
+        OR "beta blockade"[tiab])
+        AND (perioperative[tiab] OR "noncardiac surgery"[tiab]
+        OR "non-cardiac surgery"[tiab])
+    - name: "Peripheral nerve block adjuvants"
+      query: >-
+        (dexamethasone[tiab] OR dexmedetomidine[tiab] OR adjuvant*[tiab])
+        AND ("nerve block"[tiab] OR "peripheral nerve block"[tiab]
+        OR "regional anesthesia"[tiab] OR "regional anaesthesia"[tiab])
+    - name: "Pain medicine — field-shifting developments"
+      query: >-
+        ("chronic pain"[tiab] OR "pain management"[tiab] OR "neuropathic pain"[tiab])
+        AND (randomized[tiab] OR "randomised"[tiab] OR guideline[tiab]
+        OR "meta-analysis"[tiab])
 
 fda:
   # MedWatch safety alerts + drug safety communication feeds. Built in Step 4.
@@ -20,4 +120,5 @@ fda:
 society_feeds:
   # RSS/HTML change detection only: "a new/updated guideline appeared" (PRD FR-1).
   # Shortlist per PRD: ASA, ASRA, SCA, ESAIC, SAMBA, ACC/AHA guideline pages, SCCM.
+  # APSF Newsletter also belongs here (not MEDLINE-indexed).
   feeds: []                   # {name, url, kind: rss|html_watch}
