@@ -77,3 +77,27 @@ network in suite), and a live end-to-end run produced 324 items (fetched 410 →
 → dropped 82) into a real JSONL file. Decision recorded in docs/decisions/0001. Interim
 source noted in .claude/commands/digest.md; `make ingest-file` added. Next unchanged:
 Step 4 — fda.py, rss.py, complete enrichment + Tier B keyword pre-filter + DB-backed dedupe.
+
+## 2026-07-13 — Wide net + seen-ledger, edat rejected (ADR 0002)
+Founder pushed back on the "indexing lag" framing of the audit and proposed switching
+PubMed's datetype from pdat to edat to fix low weekly counts for Anesthesiology/RAPM/CCM.
+Tested directly (not just theorized): edat performed the SAME OR WORSE for every flagged
+journal (Anesthesiology 1->0, RAPM 18->3 over 7 days; 410 vs 401 in aggregate) — rejected
+on evidence. Root cause is real per-journal weekly variance, not a query bug (confirmed
+by widening the test window: Anesthesiology 90d avg ~15/week but 1 this week).
+Fix instead: config/sources.yaml pubmed.lookback_days_default 3->21 (widened per
+founder's explicit "cast a wider net" instruction) and retmax 500->3000 (verified 21-day
+true count is 1828 — old retmax would have silently truncated). New pipeline/seen_store.py
+adds a persistent, gitignored ledger (data/.seen_ids.json) so the wide, overlapping window
+doesn't reprocess the same item every run. run_daily.py's default --to-file target changed
+from a per-run OVERWRITE of a dated snapshot (data/week-YYYY-MM-DD.jsonl) to an APPEND to
+a single accumulating backlog, data/untriaged.jsonl — explicit --to-file PATH still does
+an untracked one-off overwrite (used for the audit itself) and is unaffected. Added
+--reset-seen as an escape hatch. Verified live: first run against the real 21-day window
+processed 1814 new items (378 dropped, 1436 surfaced — a one-time backlog catch-up, well
+above the ~100-300/week steady-state target; will shrink to small daily deltas once this
+is running continuously and once Step 4's Tier B keyword pre-filter tightens volume);
+immediate second run appended exactly 0. 27 tests pass (7 new for seen_store +
+run_daily rewrites), no network in suite. .claude/commands/digest.md, README, and
+Makefile updated to reference untriaged.jsonl. Full rationale in docs/decisions/0002.
+Next unchanged: Step 4 — fda.py, rss.py, enrichment, Tier B keyword pre-filter, DB dedupe.

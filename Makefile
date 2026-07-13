@@ -26,7 +26,7 @@ test:  ## Run the test suite
 
 # ---- Stubs below become real in later steps; each says which one. -------------
 
-ingest-file:  ## Ingest to data/week-<today>.jsonl (no DB needed) — interim, ADR 0001
+ingest-file:  ## Append new items to data/untriaged.jsonl (no DB needed) — ADR 0001/0002
 	uv run python -m pipeline.run_daily --to-file $(if $(DAYS),--days $(DAYS),)
 
 ingest:  ## Run today's ingestion into the DB (supports DRY_RUN=1) — Step 5

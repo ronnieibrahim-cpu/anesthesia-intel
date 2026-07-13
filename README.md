@@ -9,10 +9,13 @@ See `docs/07_START_HERE_SETUP_GUIDE.md` for setup and the weekly workflow, and `
 **Milestone M1, Step 3 complete:** PubMed ingester (`pipeline/ingest/pubmed.py`) driven by
 `config/sources.yaml` (Tier A journal allowlist + standing-question topic queries), with
 fixture-based tests and no live network calls. Plus an interim, DB-optional
-`run_daily --to-file` path (`make ingest-file`) that writes pre-filtered, compressed items
-to `data/week-<today>.jsonl` for `/digest` to read while `DATABASE_URL` is unresolved
-(ADR 0001). Next: Step 4 — `fda.py`, `rss.py`, complete enrichment (`oa_url`), Tier B
-keyword pre-filtering, and DB-backed dedupe.
+`run_daily --to-file` path (`make ingest-file`) that appends pre-filtered, compressed
+items to the accumulating `data/untriaged.jsonl` for `/digest` to read while
+`DATABASE_URL` is unresolved (ADR 0001). Lookback window widened to 21 days by default,
+with a cross-run seen-ledger so the overlap doesn't reprocess items (ADR 0002 — see it
+for why `edat` was tested and rejected as a fix for low per-journal weekly counts). Next:
+Step 4 — `fda.py`, `rss.py`, complete enrichment (`oa_url`), Tier B keyword
+pre-filtering, and DB-backed dedupe.
 
 ## Local development
 

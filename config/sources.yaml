@@ -10,12 +10,27 @@ pubmed:
   # NCBI E-utilities. api_key comes from the NCBI_API_KEY env var, never this file.
   eutils_base: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
   tool: "anesthesia-intel"     # NCBI etiquette: identify the client
-  datetype: "pdat"             # 'pdat' = date of publication; 'edat' = date added to
-                               # PubMed. pdat matches the "published in the window"
-                               # mental model; switch to edat later if indexing lag
-                               # (PRD §9) starts hiding fresh items.
-  retmax: 500                  # max PMIDs per esearch; a wide net before pre-filter
-  lookback_days_default: 3     # daily overlap window; dedupe makes re-reads safe
+  datetype: "pdat"             # 'pdat' = date of publication. Tested switching to
+                               # 'edat' (date added to PubMed) to fix low weekly
+                               # counts for some Tier A journals (docs/decisions/0002)
+                               # — edat performed the SAME OR WORSE for every journal
+                               # tested (e.g. Anesthesiology: 1 vs 0; RAPM: 18 vs 3
+                               # over 7 days), so pdat stays. The real fix was
+                               # widening lookback_days_default + the seen-ledger
+                               # below, not the date field.
+  retmax: 3000                 # verified true match counts at 21/30-day windows are
+                               # 1828/2347 (docs/decisions/0002) — old value of 500
+                               # would have silently truncated results once the
+                               # window widened. Revisit if query/window grows further.
+  lookback_days_default: 21    # widened from 3 (docs/decisions/0002): low-frequency
+                               # Tier A journals (e.g. Anesthesiology, Anesthesiology
+                               # Clinics, Critical Care Medicine) can show 0-1 items
+                               # in a narrow 7-day pdat window despite healthy 90-day
+                               # averages — this is real per-journal variance, not a
+                               # query bug (confirmed by widening the test window).
+                               # Safe to run daily/overlapping: pipeline/seen_store.py
+                               # dedupes across runs so the same item is never
+                               # re-processed twice.
 
   # Tier A journals (PRACTICE_PROFILE.md §8) — always passed to LLM triage, never
   # auto-noised. `ta` is the NLM Title Abbreviation used in PubMed's [ta] field.

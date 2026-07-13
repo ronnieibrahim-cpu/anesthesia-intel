@@ -1,4 +1,9 @@
-"""Tests for run_daily's --to-file path. No network: pubmed.fetch is monkeypatched."""
+"""Tests for run_daily's --to-file path (docs/decisions/0001, 0002).
+
+No network: pubmed.fetch is monkeypatched. Default-target tests exercise the
+seen-ledger cross-run dedupe against isolated tmp_path files; explicit-path tests
+confirm that mode stays a fresh, ledger-independent overwrite.
+"""
 
 import json
 from pathlib import Path
@@ -18,34 +23,74 @@ def _no_network(monkeypatch):
     monkeypatch.setattr(run_daily.pubmed, "fetch", lambda since: raw)
 
 
-def test_to_file_writes_jsonl(tmp_path):
-    out = tmp_path / "week.jsonl"
-    run_daily.main(["--to-file", str(out), "--days", "7"])
-    lines = out.read_text().strip().splitlines()
-    # 3 fixture items; the letter is dropped by the default filters.yaml -> 2 pass.
+@pytest.fixture(autouse=True)
+def _isolated_default_paths(tmp_path, monkeypatch):
+    """Point the default target + ledger at tmp_path so tests never touch data/."""
+    monkeypatch.setattr(run_daily, "UNTRIAGED_PATH", tmp_path / "untriaged.jsonl")
+    monkeypatch.setattr(run_daily, "SEEN_PATH", tmp_path / ".seen_ids.json")
+
+
+def _lines(path: Path) -> list[dict]:
+    return [json.loads(line) for line in path.read_text().strip().splitlines()]
+
+
+def test_first_run_appends_all_passing_items():
+    run_daily.main(["--days", "7"])
+    lines = _lines(run_daily.UNTRIAGED_PATH)
+    # 3 fixture items; the letter is dropped by config/filters.yaml -> 2 pass.
     assert len(lines) == 2
-    first = json.loads(lines[0])
-    assert first["pmid"] == "40000001"
-    assert first["n"] == 1204
-    assert "oa_url" not in first               # null field omitted
+    assert lines[0]["pmid"] == "40000001"
+    assert "oa_url" not in lines[0]                 # null field omitted
 
 
-def test_dry_run_writes_nothing(tmp_path):
-    out = tmp_path / "week.jsonl"
-    summary = run_daily.run(run_daily._parse_args(["--to-file", str(out), "--dry-run"]))
-    assert not out.exists()
+def test_second_run_with_same_data_appends_nothing_new():
+    run_daily.main(["--days", "7"])
+    first_size = run_daily.UNTRIAGED_PATH.stat().st_size
+    summary = run_daily.run(run_daily._parse_args(["--days", "7"]))
+    assert summary["new_since_last_run"] == 0
+    assert summary["passed"] == 0
+    # File is unchanged: nothing new was appended on the second run.
+    assert run_daily.UNTRIAGED_PATH.stat().st_size == first_size
+    assert len(_lines(run_daily.UNTRIAGED_PATH)) == 2
+
+
+def test_reset_seen_forces_full_resurface():
+    run_daily.main(["--days", "7"])
+    run_daily.main(["--days", "7", "--reset-seen"])
+    # Same 3 fixture rows reprocessed -> 2 more pass -> 4 lines total (append, not
+    # overwrite). Duplicate entries after a manual reset are an accepted tradeoff
+    # (docs/decisions/0002), not silently hidden.
+    assert len(_lines(run_daily.UNTRIAGED_PATH)) == 4
+
+
+def test_dry_run_mutates_nothing():
+    summary = run_daily.run(run_daily._parse_args(["--days", "7", "--dry-run"]))
     assert summary["passed"] == 2
-    assert summary["dropped"] == 1
+    assert summary["new_since_last_run"] == 3       # nothing seen yet
+    assert not run_daily.UNTRIAGED_PATH.exists()
+    assert not run_daily.SEEN_PATH.exists()
 
 
-def test_file_is_default_target_without_db(tmp_path, monkeypatch):
-    # No --to-file, no --to-db: file is the default target (DB not required).
-    monkeypatch.setattr(run_daily, "_default_file_path", lambda: tmp_path / "wk.jsonl")
-    summary = run_daily.run(run_daily._parse_args([]))
-    assert summary["wrote_file"] == str(tmp_path / "wk.jsonl")
-    assert (tmp_path / "wk.jsonl").exists()
+def test_explicit_path_is_untracked_fresh_overwrite(tmp_path):
+    out = tmp_path / "one_off.jsonl"
+    run_daily.main(["--to-file", str(out), "--days", "7"])
+    assert len(_lines(out)) == 2
+    # Running again with the same explicit path overwrites, not appends, and never
+    # touches the seen-ledger (it's the default target's mechanism only).
+    run_daily.main(["--to-file", str(out), "--days", "7"])
+    assert len(_lines(out)) == 2
+    assert not run_daily.SEEN_PATH.exists()
 
 
-def test_to_db_not_yet_wired(tmp_path):
+def test_to_db_not_yet_wired():
     with pytest.raises(NotImplementedError):
         run_daily.run(run_daily._parse_args(["--to-db"]))
+
+
+def test_lookback_default_comes_from_config():
+    args = run_daily._parse_args([])  # no --days, no --since
+    pubmed_cfg = run_daily.pubmed.load_sources_config()["pubmed"]
+    since = run_daily._since_date(args, pubmed_cfg)
+    assert since == run_daily.datetime.date.today() - run_daily.datetime.timedelta(
+        days=pubmed_cfg["lookback_days_default"]
+    )
