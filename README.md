@@ -8,8 +8,11 @@ See `docs/07_START_HERE_SETUP_GUIDE.md` for setup and the weekly workflow, and `
 
 **Milestone M1, Step 3 complete:** PubMed ingester (`pipeline/ingest/pubmed.py`) driven by
 `config/sources.yaml` (Tier A journal allowlist + standing-question topic queries), with
-fixture-based tests and no live network calls. Next: Step 4 — `fda.py`, `rss.py`,
-`normalize.py` + dedupe, the pre-filter, and Unpaywall/PMC enrichment.
+fixture-based tests and no live network calls. Plus an interim, DB-optional
+`run_daily --to-file` path (`make ingest-file`) that writes pre-filtered, compressed items
+to `data/week-<today>.jsonl` for `/digest` to read while `DATABASE_URL` is unresolved
+(ADR 0001). Next: Step 4 — `fda.py`, `rss.py`, complete enrichment (`oa_url`), Tier B
+keyword pre-filtering, and DB-backed dedupe.
 
 ## Local development
 
@@ -34,7 +37,8 @@ the schema: add a new numbered migration file, never edit a merged one.
 | `make doctor` | environment + billing-guardrail check | now |
 | `make test` | run tests | now |
 | `make migrate` | apply database migrations | now |
-| `make ingest` | run one day's ingestion locally | Step 5 |
+| `make ingest-file` | ingest to `data/week-<today>.jsonl`, no DB (interim, ADR 0001) | now |
+| `make ingest` | run one day's ingestion into the DB | Step 5 |
 | `make backfill DAYS=90` | supervised historical backfill | Step 5 |
 | `make eval` | score the labeled eval set (run in a Claude Code session) | M2 |
 | `/digest` (in Claude Code) | weekly triage → synthesis → preview → send | M2–M3 |

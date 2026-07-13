@@ -61,3 +61,19 @@ by a manual live run (NOT in tests): the assembled query returned 399 PMIDs for 
 7 days (within docs/02's expected 300–800/week) and 3 real records parsed cleanly through
 efetch. Next: Step 4 — fda.py, rss.py, normalize.py + dedupe, config-driven pre-filter,
 Unpaywall/PMC enrichment.
+
+## 2026-07-13 — M1 Step 3 addition: DB-optional --to-file ingestion (ADR 0001)
+run_daily.py gained a --to-file target writing normalized, pre-filtered, compressed items
+to data/week-YYYY-MM-DD.jsonl so /digest can run before DATABASE_URL is resolved; the DB
+write (--to-db) is separate and NOT required (raises until Step 5). This front-loaded the
+core of normalize.py (RawItem->canonical row, in-memory dedupe by DOI/PMID/URL, item_type/
+study_design/sample_size derivation) and prefilter.py (config-driven hard-drops from
+config/filters.yaml, now populated) — both additive to Step 4, not throwaway. compress()
+lives in llm/batching.py and defines the tight triage shape (nulls omitted for tokens).
+Deliberately NOT dropped at prefilter: retrospective n<floor — that's a triage demotion to
+FYI (profile §6), not a silent drop (recall > precision). oa_url present-but-null until
+enrichment (Step 4). data/ is git-ignored. Verified: 19 fixture-based tests pass (no
+network in suite), and a live end-to-end run produced 324 items (fetched 410 → deduped 406
+→ dropped 82) into a real JSONL file. Decision recorded in docs/decisions/0001. Interim
+source noted in .claude/commands/digest.md; `make ingest-file` added. Next unchanged:
+Step 4 — fda.py, rss.py, complete enrichment + Tier B keyword pre-filter + DB-backed dedupe.

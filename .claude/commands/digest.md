@@ -19,6 +19,11 @@ re-deciding architecture. Arguments: `$ARGUMENTS` (supports `--dry-run`).
 4. Coverage window: everything since the **last sent digest** (query the `digests` table),
    NOT "the last 7 days". A skipped week simply means the next digest covers two weeks;
    the caps ensure only the best items survive (docs/07 promises this behavior).
+5. **Item source (interim while DATABASE_URL is unresolved — ADR 0001):** if the DB is
+   not reachable, read the most recent `data/week-YYYY-MM-DD.jsonl` (produced by
+   `make ingest-file` / `pipeline.run_daily --to-file`) instead of the `items` table.
+   Each line is already the compressed, pre-filtered triage shape. When the DB is wired
+   (Step 5), prefer the `items` table; the file remains an offline fallback.
 
 ## Phase 1 — Triage (M2) — TODO
 

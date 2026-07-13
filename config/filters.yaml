@@ -1,21 +1,52 @@
 # config/filters.yaml — the free, deterministic pre-filter (docs/02 §3).
-# SKELETON: structure only. Rules populated and tuned in M1 Step 4 / M2.
 #
-# Purpose: cut ~300–800 weekly items down to ~100–300 before any LLM sees them,
-# protecting the founder's Pro subscription limits. Dropped items are stored and
-# marked with the rule that dropped them — never deleted (auditable, re-scorable).
+# Purpose: cut weekly volume before any LLM sees it, protecting the founder's Pro
+# subscription limits. Dropped items are marked (items.prefilter = 'drop:<rule>'),
+# never deleted (auditable, re-scorable).
+#
+# Core hard-drops implemented in M1 Step 3; Tier B keyword matching is Step 4.
 
-tier_a_journals: []
-  # Copied from PRACTICE_PROFILE.md §8 in Step 4. Tier A ALWAYS passes to LLM triage
-  # and is never auto-noised (PRD §9 risk table).
+tier_a_journals:
+  # Declared for Step 4 (Tier A always passes, never auto-noised). Not yet used by
+  # the drop logic — items already arrive via the Tier A allowlist or a topic query
+  # (config/sources.yaml), so the interim passed-set is legitimately pre-filtered.
+  # NLM Title Abbreviations, mirroring config/sources.yaml journal_allowlist.
+  - "N Engl J Med"
+  - "JAMA"
+  - "JAMA Surg"
+  - "JAMA Intern Med"
+  - "Lancet"
+  - "BMJ"
+  - "Anesthesiology"
+  - "Br J Anaesth"
+  - "Anesth Analg"
+  - "Anaesthesia"
+  - "Reg Anesth Pain Med"
+  - "Eur J Anaesthesiol"
+  - "J Clin Anesth"
+  - "Pain"
+  - "Anesthesiol Clin"
+  - "Intensive Care Med"
+  - "Crit Care Med"
+  - "Circulation"
+  - "J Am Coll Cardiol"
 
 tier_b_keywords: []
-  # Standing-question / topic keywords from PRACTICE_PROFILE.md §4–5. A Tier B journal
-  # item (i.e., any journal not in tier_a_journals, including surgical literature)
-  # passes only on a keyword match.
+  # Step 4: standing-question / topic keywords for gating Tier B (non-allowlist)
+  # journals. The topic queries in config/sources.yaml already encode these at the
+  # PubMed level; this list is for re-checking precision inside the pipeline.
 
 hard_drops:
-  # Each rule gets a name; that name is written to items.prefilter for the audit trail.
-  item_types: []              # e.g. erratum, letter (unless linked to a flagged trial)
-  retrospective_n_below: 30   # per PRACTICE_PROFILE.md §6 — intentionally permissive
-  animal_bench: keyword_tied  # drop unless keyword-tied to a standing question
+  # item_type values (from pipeline/normalize.py) to drop before triage. These are
+  # non-content or comment types (docs/02 §3). The "unless linked to a flagged trial"
+  # nuance for letters is a Step 4/M2 refinement.
+  item_types:
+    - erratum
+    - retraction
+    - letter
+    - editorial
+    - news
+    - comment
+  # NOT a drop rule — a triage DEMOTION signal (PRACTICE_PROFILE.md §6): retrospective
+  # studies below this n are capped at FYI by the triage model, never silently dropped.
+  retrospective_n_below: 30

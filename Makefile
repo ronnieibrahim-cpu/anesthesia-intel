@@ -3,7 +3,7 @@
 # live in the interactive /digest Claude Code session (docs/02 §5) — keeping them
 # out of Make prevents anyone from ever wiring them into unattended automation.
 
-.PHONY: setup doctor test ingest backfill migrate eval deep-dive rescore backup
+.PHONY: setup doctor test ingest-file ingest backfill migrate eval deep-dive rescore backup
 
 setup:  ## Install dependencies with uv
 	uv sync
@@ -26,8 +26,12 @@ test:  ## Run the test suite
 
 # ---- Stubs below become real in later steps; each says which one. -------------
 
-ingest:  ## Run today's ingestion locally (supports DRY_RUN=1) — Step 5
-	@echo "Not implemented until M1 Step 5 (pipeline/run_daily.py wiring)."; exit 1
+ingest-file:  ## Ingest to data/week-<today>.jsonl (no DB needed) — interim, ADR 0001
+	uv run python -m pipeline.run_daily --to-file $(if $(DAYS),--days $(DAYS),)
+
+ingest:  ## Run today's ingestion into the DB (supports DRY_RUN=1) — Step 5
+	@echo "DB ingestion is wired in M1 Step 5. For now use 'make ingest-file'"; \
+	echo "(writes data/week-<today>.jsonl; DATABASE_URL not required)."; exit 1
 
 backfill:  ## Backfill the last DAYS=90 days, supervised — Step 5
 	@echo "Not implemented until M1 Step 5 (supervised 90-day backfill)."; exit 1
