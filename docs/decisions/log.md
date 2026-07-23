@@ -101,3 +101,20 @@ immediate second run appended exactly 0. 27 tests pass (7 new for seen_store +
 run_daily rewrites), no network in suite. .claude/commands/digest.md, README, and
 Makefile updated to reference untriaged.jsonl. Full rationale in docs/decisions/0002.
 Next unchanged: Step 4 — fda.py, rss.py, enrichment, Tier B keyword pre-filter, DB dedupe.
+
+## 2026-07-13 — M1 Step 3 addition: Tier-B keyword pre-filter (ADR 0003)
+Pulled the Tier-B keyword gate forward from Step 4 after the founder's audit showed 79%
+of the 21-day corpus passing (far above docs/02's ~100-300/week). Added journal_abbrev
+(PubMed ISOAbbreviation) through RawItem->normalize->row so Tier A/B classification uses
+the stable NLM abbreviation, not the drift-prone full title. prefilter.py is now two-stage:
+hard-drops, then Tier A always-pass / Tier B keyword-match (word-boundary regex, not
+substring). Keywords in config/filters.yaml drawn 1:1 from PRACTICE_PROFILE.md §4-5.
+Impact: 1436->817 passed (79%->62%). 32 tests pass, lint clean. OPEN (founder decision,
+not made unilaterally): 527 of 817 passed are general medical journals (JAMA 186/21d)
+whose content is mostly non-anesthesia, but profile §8 says Tier A never auto-noises —
+tightening further contradicts §8 and needs a profile edit. Diagnosis + options in ADR
+0003. Also confirmed the ADR 0002 window mechanism on evidence: monthly journals
+(Anesthesiology, CCM) publish in single-day batches at month-start — a 7-day window's
+count is decided by whether it straddles a batch day, not by "quiet weeks"; 21 days
+absorbs this but ~32 days would be more robust if a run lands late in a month (still
+open). Next: enrichment (oa_url full-text links) + evidence grading in the digest spec.

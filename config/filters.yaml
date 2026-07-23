@@ -4,13 +4,16 @@
 # subscription limits. Dropped items are marked (items.prefilter = 'drop:<rule>'),
 # never deleted (auditable, re-scorable).
 #
-# Core hard-drops implemented in M1 Step 3; Tier B keyword matching is Step 4.
+# Hard-drops implemented in M1 Step 3; Tier B keyword matching pulled forward from
+# Step 4 per docs/decisions/0003 (the founder's audit found 79% pass rate on the
+# 21-day corpus without it — the load-bearing precision filter, not optional).
 
 tier_a_journals:
-  # Declared for Step 4 (Tier A always passes, never auto-noised). Not yet used by
-  # the drop logic — items already arrive via the Tier A allowlist or a topic query
-  # (config/sources.yaml), so the interim passed-set is legitimately pre-filtered.
-  # NLM Title Abbreviations, mirroring config/sources.yaml journal_allowlist.
+  # Tier A always passes to triage, never auto-noised (docs/02 §3). Matched against
+  # each item's journal_abbrev (PubMed's ISOAbbreviation field) — NOT the full
+  # journal title, which varies in formatting (e.g. "Lancet (London, England)")
+  # in ways that break exact matching. NLM Title Abbreviations, mirroring
+  # config/sources.yaml journal_allowlist.
   - "N Engl J Med"
   - "JAMA"
   - "JAMA Surg"
@@ -31,10 +34,84 @@ tier_a_journals:
   - "Circulation"
   - "J Am Coll Cardiol"
 
-tier_b_keywords: []
-  # Step 4: standing-question / topic keywords for gating Tier B (non-allowlist)
-  # journals. The topic queries in config/sources.yaml already encode these at the
-  # PubMed level; this list is for re-checking precision inside the pipeline.
+tier_b_keywords:
+  # A Tier B item (journal_abbrev not in tier_a_journals) passes ONLY if its
+  # title+abstract contains at least one of these, case-insensitive substring match
+  # (pipeline/prefilter.py). Deliberately specific terms, not generic surgical/
+  # perioperative words — every item here already matched a config/sources.yaml
+  # PubMed topic query at fetch time (broad recall); this list is the precision
+  # pass PRACTICE_PROFILE.md §4-5 and docs/02 §3 call for. Drawn 1:1 from those
+  # sections — grouped by topic below for auditability, matched as one flat OR.
+
+  # GLP-1 receptor agonists and perioperative management (§4, PINNED)
+  - "glp-1"
+  - "glucagon-like peptide"
+  - "semaglutide"
+  - "tirzepatide"
+  - "liraglutide"
+  - "dulaglutide"
+  - "exenatide"
+  - "gastric emptying"
+  - "residual gastric"
+  - "gastric ultrasound"
+
+  # Perioperative cardiac workup and optimization (§4)
+  - "functional capacity"
+  - "duke activity status"
+  - "dasi"
+  - "revised cardiac risk index"
+  - "myocardial injury after noncardiac surgery"
+  - "myocardial injury after non-cardiac surgery"
+  - "mina"
+  - "perioperative troponin"
+  - "preoperative cardiac risk"
+  - "perioperative cardiac risk"
+
+  # Intraoperative BP targets and organ protection (§4)
+  - "intraoperative hypotension"
+  - "mean arterial pressure target"
+  - "blood pressure target"
+  - "perioperative acute kidney injury"
+  - "postoperative acute kidney injury"
+
+  # Processed EEG / depth of anesthesia and postoperative delirium (§4)
+  - "bispectral index"
+  - "processed eeg"
+  - "processed electroencephalography"
+  - "depth of anesthesia"
+  - "burst suppression"
+  - "postoperative delirium"
+  - "postoperative neurocognitive"
+  - "postoperative cognitive"
+
+  # Regional vs GA for hip fracture and other ortho populations (§4, post-REGAIN/RAGA)
+  - "regain trial"
+  - "raga trial"
+  - "hip fracture"
+  - "spinal anesthesia"
+  - "spinal anaesthesia"
+  - "neuraxial anesthesia"
+  - "neuraxial anaesthesia"
+
+  # Pain medicine developments significant to a fellowship-trained observer (§4)
+  - "chronic pain guideline"
+  - "neuropathic pain"
+  - "interventional pain"
+
+  # Controversies (§5)
+  - "glycemic control"
+  - "tight glucose"
+  - "liberal glucose"
+  - "tranexamic acid"
+  - "txa"
+  - "opioid-free anesthesia"
+  - "opioid-free anaesthesia"
+  - "opioid-sparing"
+  - "perioperative beta-blocker"
+  - "perioperative beta-blockade"
+  - "perineural dexmedetomidine"
+  - "perineural dexamethasone"
+  - "block adjuvant"
 
 hard_drops:
   # item_type values (from pipeline/normalize.py) to drop before triage. These are

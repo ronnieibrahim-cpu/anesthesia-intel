@@ -97,6 +97,7 @@ def normalize(raw_items) -> list[dict]:
             "pmid": raw.pmid,
             "title": raw.title,
             "journal": raw.journal,
+            "journal_abbrev": raw.journal_abbrev,  # NLM ta -- reliable Tier A/B match key
             "item_type": item_type,
             "study_design": study_design,
             "sample_size": _parse_sample_size(raw.abstract),

@@ -33,6 +33,7 @@ def test_first_article_full_fields(parsed):
     assert a.external_id == "40000001"
     assert a.doi == "10.1056/NEJMoa2400001"
     assert a.journal == "The New England journal of medicine"
+    assert a.journal_abbrev == "N Engl J Med"
     assert a.title.startswith("Semaglutide and Residual Gastric Content")
     assert a.url == "https://pubmed.ncbi.nlm.nih.gov/40000001/"
     assert a.published_on == "2026-06-24"

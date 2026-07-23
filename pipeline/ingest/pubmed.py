@@ -159,6 +159,7 @@ def parse_efetch_xml(xml: bytes | str) -> list[RawItem]:
                 doi=_parse_doi(pubmed_article, article),
                 title=_text(article.find("ArticleTitle")) or "(no title)",
                 journal=article.findtext("Journal/Title"),
+                journal_abbrev=article.findtext("Journal/ISOAbbreviation"),
                 abstract=_parse_abstract(article),
                 published_on=_parse_pubdate(article.find("Journal/JournalIssue/PubDate")),
                 url=f"https://pubmed.ncbi.nlm.nih.gov/{pmid.strip()}/",
