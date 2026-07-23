@@ -136,3 +136,22 @@ link whenever oa_url exists (abstract-only otherwise; never paywalled/circumvent
 CLAUDE.md rule 2); footer reports OA coverage. Added a token-efficient-operation section
 to the digest spec. Next: Step 4 remainder — fda.py, rss.py, DB-backed dedupe (Step 5);
 the general-journal Tier-A tiering decision (ADR 0003) remains open for the founder.
+
+## 2026-07-23 — Handoff for M2/M3 (/digest) + reference digest
+Wrote docs/08_HANDOFF_DIGEST.md: the full handoff for the next agent (an Opus overseer) to
+build the working /digest command — definition of done, what's built vs stub, the M2/M3
+milestone plan + acceptance gates, environment reality (no ANTHROPIC_API_KEY; DATABASE_URL
+unresolved so operate off data/untriaged.jsonl; UNPAYWALL_EMAIL/RESEND_API_KEY unset), the
+guardrails, the open founder decisions (general-journal tiering ADR 0003; window length ADR
+0002; secrets), and a key-file map. Handoff §7 mandates the token-efficiency workflow the
+founder asked for: Opus holds context + prompt engineering + eval interpretation + review;
+Sonnet subagents implement well-specified modules/tests (mirroring pubmed.py/enrich.py),
+with the overseer verifying every subagent's output before committing. Captured a real
+generated digest as templates/digest.sample.html — the design/quality bar for M3's Jinja
+template (marked DESIGN REFERENCE, not the live template). Updated docs to match reality:
+README status points to the handoff; .claude/commands/digest.md flagged authoritative-spec +
+handoff pointer; PRD FR-3 now makes the evidence grade (A-D) and maximized OA coverage
+binding requirements; roadmap M2/M3 deliverables reference the handoff, the A-D grade, the
+sample template, and the DB-optional reality. No code changed; 47 tests still green. Next:
+a fresh Opus session picks up docs/08_HANDOFF_DIGEST.md and starts M2 (triage prompt +
+batching + scores + eval harness), pending the founder's eval-label set and tiering decision.

@@ -70,7 +70,12 @@ monitoring the literature any other way.
 - Hard caps: ≤5 practice-changing, ≤12 worth-knowing, ≤15 FYI (title + one line). Exceeding a
   cap means demoting, not expanding. Scarcity is the feature.
 - Every item links to the source and, when available, the lawful "Free full text" link, plus
-  four feedback links.
+  four feedback links. Maximizing lawful open-access coverage is an explicit goal (the daily
+  pipeline enriches every passed item via Unpaywall + PMC; see `pipeline/enrich.py`).
+- **Evidence grade (binding):** every surfaced item carries a quality-of-evidence grade
+  (A–D; scale defined in `.claude/commands/digest.md`), shown inline, so the strength of
+  evidence is visible at a glance — an eye-catching topic on grade-C/D evidence is labeled
+  as such, and the synthesis says so (the journal-club caveat).
 - **Preview before send:** the session renders the digest and shows it; the user approves (or
   edits categorizations conversationally — "demote item 4"), then it sends via Resend and the
   copy is stored. Human-in-the-loop review is a feature of this architecture, not overhead.

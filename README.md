@@ -6,6 +6,10 @@ See `docs/07_START_HERE_SETUP_GUIDE.md` for setup and the weekly workflow, and `
 
 ## Status
 
+**Next up — Milestones M2/M3 (`/digest`):** see **`docs/08_HANDOFF_DIGEST.md`** for the full
+handoff to build the working `/digest` command (triage → synthesis → preview → send). The
+target output design is `templates/digest.sample.html` (a real generated digest).
+
 **Milestone M1, Step 3 complete:** PubMed ingester (`pipeline/ingest/pubmed.py`) driven by
 `config/sources.yaml` (Tier A journal allowlist + standing-question topic queries), with
 fixture-based tests and no live network calls. Plus an interim, DB-optional

@@ -31,9 +31,14 @@ present; zero duplicate `external_id`s; a killed mid-run job re-runs cleanly.
 
 ## M2 — Triage that agrees with you (Week 3–5)
 
+> **Implementers:** `docs/08_HANDOFF_DIGEST.md` is the step-by-step handoff for M2/M3
+> (what's built vs stub, the Opus-overseer + Sonnet-subagent workflow, open decisions).
+
 **Deliverables:** the `/digest` slash command (triage phase), `triage-v1.md` prompt, structured
-scoring written to the DB from within the session, `make eval` runnable in-session, eval report
-checked into the repo, pre-filter tuning in `config/filters.yaml`.
+scoring (including the A–D evidence grade) written from within the session, `make eval`
+runnable in-session, eval report checked into the repo, pre-filter tuning in
+`config/filters.yaml`. Scores persist to the DB when reachable; today they operate off
+`data/untriaged.jsonl` (DATABASE_URL unresolved in cloud sessions — see the handoff §6).
 
 **Acceptance:** ≥90% practice-changing recall and ≥80% overall tier agreement on the eval set;
 one full week's pre-filtered volume triaged comfortably within a single Pro session.
@@ -43,8 +48,10 @@ everything downstream depends on it.
 
 ## M3 — First real digest (Week 5–6)
 
-**Deliverables:** `/digest` synthesis phase, Jinja2 template, caps enforcement, preview-then-
-confirm send via Resend, `--dry-run` mode, digest copy stored in DB.
+**Deliverables:** `/digest` synthesis phase, Jinja2 template (reproducing the design of
+`templates/digest.sample.html` — per-item summary, evidence grade, "Free full text" link),
+caps enforcement, preview-then-confirm send via Resend, `--dry-run` mode, digest copy stored
+(DB when reachable, else to disk).
 
 **Acceptance:** a real Monday digest generated end-to-end in one interactive session (ingest ran
 automatically all week; you typed one command and one "send"), and your honest reaction is

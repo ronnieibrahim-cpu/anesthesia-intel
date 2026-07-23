@@ -4,9 +4,13 @@ description: Weekly digest — triage the week's pre-filtered items against PRAC
 
 # /digest — the Monday session
 
-**Status: SKELETON.** Phase 1 is implemented in Milestone M2; Phases 2–3 in M3.
-This file defines the structure now so later sessions fill in slots instead of
-re-deciding architecture. Arguments: `$ARGUMENTS` (supports `--dry-run`).
+**Status: SKELETON — this file is the authoritative behavioral spec; the command is not
+built yet.** Phase 1 is implemented in Milestone M2; Phases 2–3 in M3. This file defines
+the structure so later sessions fill in slots instead of re-deciding architecture.
+Arguments: `$ARGUMENTS` (supports `--dry-run`).
+
+**Implementers:** read `docs/08_HANDOFF_DIGEST.md` first (milestone plan, what's built vs
+stub, Sonnet-subagent strategy). The output design bar is `templates/digest.sample.html`.
 
 ## Preamble (always, before any phase)
 
