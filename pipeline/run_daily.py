@@ -31,7 +31,9 @@ Other flags:
 
 This is the ONE orchestrator that GitHub Actions, local runs, backfill, and the future
 API path all call, so the upgrade path stays a config change, not a rewrite (docs/02 §9).
-Enrichment (oa_url) lands in Step 4; until then that field is present-but-null.
+Enrichment (oa_url/oa_source via pipeline/enrich.py, Step 4) runs on passed items only,
+right before compress(); it's skipped on --dry-run (see run(), below) to avoid spending
+Unpaywall/NCBI lookups on a preview that writes nothing.
 
 Usage: uv run python -m pipeline.run_daily [--to-file [PATH]] [--days N] [--dry-run]
 """
@@ -44,7 +46,7 @@ from pathlib import Path
 import yaml
 
 from llm.batching import compress
-from pipeline import normalize, prefilter, seen_store
+from pipeline import enrich, normalize, prefilter, seen_store
 from pipeline.ingest import pubmed
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -116,6 +118,12 @@ def run(args) -> dict:
     rows_to_classify = prefilter.apply(rows_to_classify, filters_cfg)
     passed = [r for r in rows_to_classify if r["prefilter"] == "passed"]
     dropped = len(rows_to_classify) - len(passed)
+    # Enrich only passed items (saves API calls) with lawful OA links, before
+    # compress() so oa_url is available to include. Skipped on --dry-run: a dry
+    # run is for previewing counts, not for spending Unpaywall/NCBI rate-limit
+    # budget on items that won't be written anywhere.
+    if not args.dry_run:
+        enrich.enrich(passed)
     compressed = [compress(r) for r in passed]
 
     summary = {

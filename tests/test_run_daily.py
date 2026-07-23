@@ -21,6 +21,10 @@ def _no_network(monkeypatch):
     """Replace the one network call with fixture-backed RawItems."""
     raw = parse_efetch_xml(FIXTURE.read_bytes())
     monkeypatch.setattr(run_daily.pubmed, "fetch", lambda since: raw)
+    # enrich() also hits the network (Unpaywall/PMC) for non-dry-run calls; keep
+    # these tests deterministic and network-free by making both lookups miss.
+    monkeypatch.setattr(run_daily.enrich, "_unpaywall_get", lambda doi: {})
+    monkeypatch.setattr(run_daily.enrich, "_pmc_elink", lambda pmid: {})
 
 
 @pytest.fixture(autouse=True)

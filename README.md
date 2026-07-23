@@ -12,10 +12,7 @@ fixture-based tests and no live network calls. Plus an interim, DB-optional
 `run_daily --to-file` path (`make ingest-file`) that appends pre-filtered, compressed
 items to the accumulating `data/untriaged.jsonl` for `/digest` to read while
 `DATABASE_URL` is unresolved (ADR 0001). Lookback window widened to 21 days by default,
-with a cross-run seen-ledger so the overlap doesn't reprocess items (ADR 0002 — see it
-for why `edat` was tested and rejected as a fix for low per-journal weekly counts). Next:
-Step 4 — `fda.py`, `rss.py`, complete enrichment (`oa_url`), Tier B keyword
-pre-filtering, and DB-backed dedupe.
+with a cross-run seen-ledger so the overlap doesn't reprocess items (ADR 0002). Tier-B keyword pre-filtering (ADR 0003) and lawful open-access full-text enrichment (Unpaywall + PMC, `pipeline/enrich.py`) are implemented; the digest spec now requires a summary, an evidence grade (A-D), and a "Free full text" link per surfaced item. Next: Step 4 remainder — `fda.py`, `rss.py`, and DB-backed dedupe/persistence.
 
 ## Local development
 

@@ -118,3 +118,21 @@ tightening further contradicts §8 and needs a profile edit. Diagnosis + options
 count is decided by whether it straddles a batch day, not by "quiet weeks"; 21 days
 absorbs this but ~32 days would be more robust if a run lands late in a month (still
 open). Next: enrichment (oa_url full-text links) + evidence grading in the digest spec.
+
+## 2026-07-13 — M1 Step 3 addition: OA full-text enrichment + digest requirements
+Implemented pipeline/enrich.py (Unpaywall by DOI, then PubMed Central ELink by PMID as
+fallback), mirroring pubmed.py's pure-parse / network-at-edges split; wired into
+run_daily.run() to enrich only the passed set before compress(), skipped on --dry-run.
+Per-row error isolation, PLUS a systematic-config-error guard: a Unpaywall 401/403/422
+(e.g. an invalid UNPAYWALL_EMAIL) warns once and disables Unpaywall for the batch so it
+doesn't silently zero out OA coverage — items still fall back to PMC. Verified live: PMC
+path resolves real articles (PMID 33782057 -> PMC8005924); Unpaywall connectivity
+confirmed (needs a real email; test@example.com 422s, which now trips the guard and PMC
+fallback still recovers the item). 47 tests pass (14 enrich + 1 guard, all network-free).
+Founder requirements baked into .claude/commands/digest.md: every surfaced item shows a
+2-4 sentence summary, an evidence grade (A-D scale defined: A=RCT-meta/guideline/FDA ...
+D=case report/bench/preprint, stored in scores.evidence_level), and a "Free full text"
+link whenever oa_url exists (abstract-only otherwise; never paywalled/circumvented per
+CLAUDE.md rule 2); footer reports OA coverage. Added a token-efficient-operation section
+to the digest spec. Next: Step 4 remainder — fda.py, rss.py, DB-backed dedupe (Step 5);
+the general-journal Tier-A tiering decision (ADR 0003) remains open for the founder.
