@@ -10,6 +10,8 @@ This module only merges, caps/demotes, and renders — pure logic, thin I/O edge
 mirroring the split in pipeline/enrich.py.
 """
 
+import argparse
+import datetime
 import json
 from pathlib import Path
 
@@ -20,12 +22,17 @@ from llm.scores import load_current_scores
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SETTINGS_PATH = REPO_ROOT / "config" / "settings.yaml"
+DATA_DIR = REPO_ROOT / "data"
 
 PUBMED_URL = "https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
 
 _MONTHS = (
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+)
+_MONTHS_FULL = (
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
 )
 
 TIER_LABELS = {
@@ -323,3 +330,51 @@ def build_from_files(
     )
     html = render_html(context)
     return write_digest(html, out_path)
+
+
+# ---- CLI ------------------------------------------------------------------------
+
+def _default_display_date(today=None):
+    """Today as a display string like 'July 24, 2026' (no leading zero on the day)."""
+    today = today or datetime.date.today()
+    return f"{_MONTHS_FULL[today.month - 1]} {today.day}, {today.year}"
+
+
+def main(argv=None):
+    """Render the weekly digest from the interim files in one command.
+
+    The /digest session produces `data/scores.jsonl` (triage) and
+    `data/synthesis.jsonl` (synthesis) from `data/untriaged.jsonl`, then calls this to
+    write the HTML — the last, deterministic step. All paths default to the interim
+    locations so `python -m pipeline.digest_render` just works inside a session.
+    """
+    parser = argparse.ArgumentParser(
+        prog="pipeline.digest_render",
+        description="Render the weekly digest HTML from the interim triage + synthesis files.",
+    )
+    parser.add_argument("--items", default=str(DATA_DIR / "untriaged.jsonl"))
+    parser.add_argument("--scores", default=str(DATA_DIR / "scores.jsonl"))
+    parser.add_argument("--synthesis", default=str(DATA_DIR / "synthesis.jsonl"))
+    parser.add_argument("--out", default=None,
+                        help="output HTML path (default: data/digest-<today>.html)")
+    parser.add_argument("--date", default=None,
+                        help="display date on the masthead (default: today, e.g. 'July 24, 2026')")
+    parser.add_argument("--screened", type=int, default=None,
+                        help="total items screened for the footer (default: lines in --items)")
+    parser.add_argument("--brief", default=None, help="optional 'week in brief' masthead blurb")
+    args = parser.parse_args(argv)
+
+    out_path = args.out or str(DATA_DIR / f"digest-{datetime.date.today().isoformat()}.html")
+    path = build_from_files(
+        args.items, args.scores, args.synthesis,
+        out_path=out_path,
+        digest_date=args.date or _default_display_date(),
+        screened_count=args.screened,
+        week_in_brief=args.brief,
+    )
+    print(f"[digest_render] wrote {path}")
+    return path
+
+
+if __name__ == "__main__":
+    main()

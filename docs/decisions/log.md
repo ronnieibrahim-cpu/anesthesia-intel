@@ -224,3 +224,23 @@ DEFERRED / next: wire pipeline/send.py (Resend) when the founder wants live emai
 real `make eval` once the founder's labels land (still the M2 gate); persist sent digests to
 the DB once DATABASE_URL resolves. FYI-full is the token-hungriest setting — flip
 digest.fyi_writeup to one_line if a Monday session ever pinches.
+
+## 2026-07-24 — Make /digest a single command in a fresh session
+Founder asked whether opening a new session next week and typing /digest would just produce
+a digest. It didn't quite: a fresh cloud session is an empty re-clone (data/ is gitignored),
+and automated daily ingestion isn't on (daily.yml cron commented out; DATABASE_URL still
+unresolved), so the corpus wasn't there. Closed the gap without turning on automation (the
+Makefile deliberately keeps triage/digest out of Make to prevent unattended LLM runs):
+- .claude/commands/digest.md now opens with an explicit ordered single-command flow — Step 0
+  runs `make ingest-file` when data/untriaged.jsonl is absent (fresh 21-day PubMed pull, no
+  DB/key), then triage -> data/scores.jsonl, synthesis -> data/synthesis.jsonl, render. Fixed
+  the stale "Phase 1 — TODO" heading (it's BUILT) and pinned the interim file paths so the
+  session and renderer agree.
+- pipeline/digest_render.py gained a CLI: `python -m pipeline.digest_render --screened <N>
+  [--brief "…"]` wraps build_from_files with interim-path defaults, so the last (deterministic)
+  step is one reliable line instead of a hand-rolled script each week. 2 tests added
+  (default-date formatting; end-to-end main() that excludes noise and honors --screened).
+Verified: `python -m pipeline.digest_render` renders the demo end-to-end from the CLI; 117
+tests pass (2 new), ruff clean. Still interactive by design (triage+synthesis are the session,
+on the founder's Pro plan — no API key); email + cross-session persistence remain the open
+turnkey pieces, both gated on the same DATABASE_URL work.
