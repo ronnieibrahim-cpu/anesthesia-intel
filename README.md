@@ -15,9 +15,18 @@ append-only DB/file sinks), and `evalset/run_eval.py` wired to `make eval`
 the founder hand-labels ~100–150 items into `evalset/labels.csv`** (a leftover-M0 task the
 harness surfaces; it never fabricates labels). Synthesis + send (M3) are still to build.
 
-**Next up — Milestone M3 (`/digest` synthesis + send):** see **`docs/08_HANDOFF_DIGEST.md`**
-for the full handoff. The target output design is `templates/digest.sample.html` (a real
-generated digest).
+**Milestone M3 — digest built through preview-to-file:** `/digest` now synthesizes a
+four-part brief per article (summary · impact on your practice · impact on anesthesia
+broadly · looking ahead), grades evidence A–D, and links free full text when a lawful
+open-access copy exists. `pipeline/digest_render.py` deterministically merges triage +
+synthesis, enforces the tier caps by demotion, and renders `templates/digest.html.j2`
+(reproducing the `digest.sample.html` design, both light/dark themes) **to a file to
+preview**. Real email delivery (Resend) is deferred by choice — a small follow-up when
+wanted. FYI write-up depth is a config knob (`config/settings.yaml` `digest.fyi_writeup`).
+
+**Still open:** the M2 triage gate awaits the founder's hand-labels
+(`evalset/labels.csv`); email send + DB persistence are the remaining M3 follow-ups. See
+**`docs/08_HANDOFF_DIGEST.md`**.
 
 **Milestone M1, Step 3 complete:** PubMed ingester (`pipeline/ingest/pubmed.py`) driven by
 `config/sources.yaml` (Tier A journal allowlist + standing-question topic queries), with
@@ -54,7 +63,7 @@ the schema: add a new numbered migration file, never edit a merged one.
 | `make ingest` | run one day's ingestion into the DB | Step 5 |
 | `make backfill DAYS=90` | supervised historical backfill | Step 5 |
 | `make eval` | compare triage predictions to founder labels (recall/agreement/confusion) | now (needs labels) |
-| `/digest` (in Claude Code) | weekly triage → synthesis → preview → send | triage now; synthesis/send M3 |
+| `/digest` (in Claude Code) | weekly triage → synthesis → preview → send | triage + synthesis + preview-to-file now; email send later |
 | `make deep-dive PMID=…` | structured brief for one paper | M4 |
 
 The weekly LLM work is deliberately **not** automated: `/digest` runs in an interactive

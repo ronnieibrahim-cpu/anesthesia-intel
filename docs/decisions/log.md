@@ -190,3 +190,37 @@ OPEN / founder tasks (surfaced, not fabricated): (1) evalset/labels.csv is still
 0003) and the 21-vs-32-day window (ADR 0002) remain the founder's calls. Next: run the real
 eval once labels exist (record the delta in triage-v1's changelog per rule 5, iterate profile
 -first), then M3 (synthesis prompt + Jinja template + Resend send).
+
+## 2026-07-24 — M3: synthesis + deterministic render (preview-to-file; email deferred)
+Built /digest through preview-to-file, per the founder's three product calls this session:
+(1) full four-part write-up for EVERY surfaced tier including FYI, (2) build the digest now
+and calibrate triage with eval labels afterward, (3) preview-to-file first, real email later.
+- prompts/synthesis-v1.md (real body): per surviving item, a strict-JSON four-part brief
+  keyed by pmid — summary, practice_impact (the founder's own practice), field_impact
+  (anesthesia broadly), future_considerations (caveat last) — plus two short display
+  descriptors (design_line, grade_label). Academic journal-club voice (PROFILE §9). Emits
+  only new prose (metadata/grade come from the item + triage) to stay token-frugal.
+- config/settings.yaml: digest.fyi_writeup (full | one_line) makes FYI depth a config knob,
+  not a code change — founder's V1 default is `full`.
+- pipeline/digest_render.py (new, deterministic — no LLM call): merges compressed item +
+  triage score + synthesis prose by pmid, enforces the settings caps (5/12/15) by DEMOTING
+  the weakest overflow (grade A>B>C>D, then original-tier weight, then recency; PC->WK->FYI,
+  FYI floor trims), computes the footer honesty metric (screened->surfaced + OA coverage),
+  and renders templates/digest.html.j2 to disk. Mirrors enrich.py's pure-logic/thin-I/O
+  split. build_from_files() reads the interim JSONL files (items/scores/synthesis), so it
+  works with no DATABASE_URL (ADR 0001).
+- templates/digest.html.j2: reproduces templates/digest.sample.html's design tokens and both
+  light/dark themes verbatim, extended with the four labeled parts (Summary / Your practice /
+  Anesthesia broadly / Looking ahead) and the compact FYI one_line mode. No feedback links
+  yet (M4). (Jinja gotcha handled: tier['items'] not tier.items, since dict.items() shadows.)
+- .claude/commands/digest.md: Phase 2/3 rewritten to the built preview-to-file behavior;
+  Phase 3 email send (Resend, new pipeline/send.py) explicitly DEFERRED by founder choice —
+  needs RESEND_API_KEY + a confirmed recipient when wanted.
+Work split per handoff §7: Opus wrote the synthesis prompt + data contract + command spec;
+a Sonnet subagent built the render layer (template + module + 21 tests) to that contract;
+overseer verified — read the diff, ran the suite, and rendered a real demo digest end-to-end
+through build_from_files before committing. 115 tests pass (21 new), ruff clean, doctor OK.
+DEFERRED / next: wire pipeline/send.py (Resend) when the founder wants live email; run the
+real `make eval` once the founder's labels land (still the M2 gate); persist sent digests to
+the DB once DATABASE_URL resolves. FYI-full is the token-hungriest setting — flip
+digest.fyi_writeup to one_line if a Monday session ever pinches.
