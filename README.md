@@ -16,9 +16,9 @@ the founder hand-labels ~100–150 items into `evalset/labels.csv`** (a leftover
 harness surfaces; it never fabricates labels). Synthesis + send (M3) are still to build.
 
 **Milestone M3 — digest built through preview-to-file:** `/digest` now synthesizes a
-four-part brief per article (summary · impact on your practice · impact on anesthesia
-broadly · looking ahead), grades evidence A–D, and links free full text when a lawful
-open-access copy exists. `pipeline/digest_render.py` deterministically merges triage +
+per-article brief that reports the study's results and the article's conclusion (summary +
+findings · conclusion · impact on your practice · impact on anesthesia broadly · looking
+ahead), grades evidence A–D, and links free full text when a lawful open-access copy exists. `pipeline/digest_render.py` deterministically merges triage +
 synthesis, enforces the tier caps by demotion, and renders `templates/digest.html.j2`
 (reproducing the `digest.sample.html` design, both light/dark themes) **to a file to
 preview**. Real email delivery (Resend) is deferred by choice — a small follow-up when

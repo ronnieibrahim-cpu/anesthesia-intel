@@ -6,9 +6,10 @@
   external resources, dark-mode safe. All CSS is inline below. The screened→surfaced
   ratio in the footer is the product's honesty metric and appears every week.
 
-  Each full-writeup item shows FOUR labeled parts (richer than the sample's single
-  .summary paragraph): Summary / Your practice / Anesthesia broadly / Looking ahead —
-  the founder's V1 requirement. FYI items in one_line mode keep the sample's compact
+  Each full-writeup item shows labeled parts (richer than the sample's single .summary
+  paragraph): Summary (study + results) / Conclusion (the article's bottom line) / Your
+  practice / Anesthesia broadly / Looking ahead — the founder's requirement. Each part
+  renders only if its field is present. FYI items in one_line mode keep the sample's compact
   single-line style. Feedback links are M4, not here.
 #}
 <title>Anesthesia Intelligence — Weekly Digest</title>
@@ -211,6 +212,9 @@
       <div class="parts">
         {% if item.summary %}
         <p class="part"><span class="label">Summary</span>{{ item.summary }}</p>
+        {% endif %}
+        {% if item.conclusion %}
+        <p class="part"><span class="label">Conclusion</span>{{ item.conclusion }}</p>
         {% endif %}
         {% if item.practice_impact %}
         <p class="part"><span class="label">Your practice</span>{{ item.practice_impact }}</p>

@@ -244,3 +244,21 @@ Verified: `python -m pipeline.digest_render` renders the demo end-to-end from th
 tests pass (2 new), ruff clean. Still interactive by design (triage+synthesis are the session,
 on the founder's Pro plan — no API key); email + cross-session persistence remain the open
 turnkey pieces, both gated on the same DATABASE_URL work.
+
+## 2026-07-24 — Digest entries now report results + the article's conclusion (synthesis-v2)
+Founder feedback: each entry should give a summary and synthesis of RESULTS and report the
+article's CONCLUSION, not just what was studied and why it matters. Copied synthesis-v1 ->
+prompts/synthesis-v2.md (never edit a released prompt in place, rule 4): `summary` now states
+what was studied AND the key findings (direction/effect/numbers the abstract gives); a new
+`conclusion` field reports the article's own bottom line from the abstract's Conclusions,
+attributed to the authors and not upgraded past what they claim. Hard constraint baked in:
+results/conclusion come from the ABSTRACT (or a lawful oa_url full text) only — never
+paywalled/circumvented text (rule 2); if the abstract states no result/conclusion, say so.
+Render side: digest_render.merge_item carries `conclusion`; templates/digest.html.j2 shows a
+"Conclusion" labeled part right after "Summary" (each part still renders only if present).
+Command spec points synthesis at v2; README/settings/template comments updated from
+"four-part" to the results+conclusion structure. Note on rule 5 (eval before a prompt change):
+`make eval` scores TRIAGE, not synthesis prose (CLAUDE.md: never mock LLM prose), so this
+synthesis-only change has no eval delta and the triage gate is unchanged (still blocked on the
+founder's labels). 118 tests pass (1 updated helper + a conclusion carry test), ruff clean.
+Demo re-rendered end-to-end for founder review.

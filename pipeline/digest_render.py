@@ -102,6 +102,7 @@ def merge_item(item, score, synth):
         "design_line": synth.get("design_line") or _design_line_fallback(item),
         "one_line_takeaway": score.get("one_line_takeaway"),
         "summary": synth.get("summary"),
+        "conclusion": synth.get("conclusion"),
         "practice_impact": synth.get("practice_impact"),
         "field_impact": synth.get("field_impact"),
         "future_considerations": synth.get("future_considerations"),

@@ -38,7 +38,8 @@ def _synth(pmid, **overrides):
         "pmid": pmid,
         "design_line": "RCT, n=90",
         "grade_label": "single RCT",
-        "summary": "What was studied and found.",
+        "summary": "What was studied and the key results found.",
+        "conclusion": "The authors conclude the intervention helps.",
         "practice_impact": "What it means for your practice.",
         "field_impact": "What it means for the field.",
         "future_considerations": "The caveat, last.",
@@ -92,7 +93,8 @@ def test_merge_item_builds_pubmed_url_from_pmid():
 
 def test_merge_item_carries_synthesis_fields():
     record = merge_item(_item("40000001"), _score("40000001"), _synth("40000001"))
-    assert record["summary"] == "What was studied and found."
+    assert record["summary"] == "What was studied and the key results found."
+    assert record["conclusion"] == "The authors conclude the intervention helps."
     assert record["practice_impact"] == "What it means for your practice."
     assert record["field_impact"] == "What it means for the field."
     assert record["future_considerations"] == "The caveat, last."
@@ -221,15 +223,24 @@ def test_render_html_contains_masthead_and_tier_labels():
     assert "<h2>FYI</h2>" not in html
 
 
-def test_render_html_grade_chip_and_four_labels_and_ft_link():
+def test_render_html_grade_chip_and_labels_and_ft_link():
     html = render_html(_small_context())
     assert 'g-A' in html
     assert "Summary" in html
+    assert "Conclusion" in html
     assert "Your practice" in html
     assert "Anesthesia broadly" in html
     assert "Looking ahead" in html
     assert "Free full text" in html
     assert 'href="https://example.org/pmc/40000001"' in html
+
+
+def test_merge_item_carries_conclusion_and_results_summary():
+    record = merge_item(_item("40000001"), _score("40000001"), _synth("40000001"))
+    assert record["conclusion"] == "The authors conclude the intervention helps."
+    assert "results" in record["summary"]
+    # absent synthesis -> conclusion is None, not a crash
+    assert merge_item(_item("40000002"), _score("40000002"), None)["conclusion"] is None
 
 
 def test_render_html_no_ft_link_when_oa_url_absent():

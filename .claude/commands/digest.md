@@ -85,21 +85,25 @@ and the synthesis should say so (that is exactly the journal-club caveat the fou
 
 - Switch to the synthesis model from `config/models.yaml` (strongest available).
 - Take surviving items (practice_changing / worth_knowing / fyi — never noise).
-- Score each with `prompts/synthesis-v1.md`: it returns, per item (strict JSON keyed by
-  pmid), a **four-part brief** — `summary`, `practice_impact` (the founder's own practice),
+- Score each with `prompts/synthesis-v2.md`: it returns, per item (strict JSON keyed by
+  pmid), a brief that **reports the study's results and the article's conclusion** —
+  `summary` (what was studied + the key findings), `conclusion` (the article's own bottom
+  line, from the abstract's Conclusions), `practice_impact` (the founder's own practice),
   `field_impact` (anesthesia broadly), `future_considerations` (caveat last) — plus two
-  short display descriptors (`design_line`, `grade_label`). Write the array to a JSONL the
-  renderer reads (e.g. `data/synthesis.jsonl`, latest-per-pmid winning).
-- **Every surfaced item shows (binding, founder requirement):** the four-part write-up
-  above, its **evidence grade A–D** (from Phase 1) as an inline chip, and a **"Free full
-  text" link whenever `oa_url` is present** (abstract-only otherwise — never a paywalled or
-  circumvented link, CLAUDE.md rule 2). FYI depth follows `config/settings.yaml`
-  `digest.fyi_writeup`: `full` gives FYI the same four-part brief (the founder's V1 choice),
-  `one_line` collapses FYI to its triage `one_line_takeaway`.
+  short display descriptors (`design_line`, `grade_label`). Draw results/conclusion from the
+  abstract (or a lawful `oa_url` full text) only — never paywalled text (rule 2). Write the
+  array to a JSONL the renderer reads (e.g. `data/synthesis.jsonl`, latest-per-pmid winning).
+- **Every surfaced item shows (binding, founder requirement):** the write-up above
+  (summary + the study's results, the article's conclusion, and the three impact parts),
+  its **evidence grade A–D** (from Phase 1) as an inline chip, and a **"Free full text" link
+  whenever `oa_url` is present** (abstract-only otherwise — never a paywalled or circumvented
+  link, CLAUDE.md rule 2). FYI depth follows `config/settings.yaml` `digest.fyi_writeup`:
+  `full` gives FYI the same full brief (the founder's V1 choice), `one_line` collapses FYI to
+  its triage `one_line_takeaway`.
 - **Caps and rendering are deterministic — not the model's job.** `pipeline/digest_render.py`
   merges item metadata + triage score + synthesis prose by pmid, enforces the
   `config/settings.yaml` caps (≤5 / ≤12 / ≤15) by **demoting** the weakest overflow (never
-  expanding), and renders `templates/digest.html.j2` — the four-part blocks, grade chips,
+  expanding), and renders `templates/digest.html.j2` — the per-item blocks, grade chips,
   "Free full text" links, and the pipeline-health footer (screened→surfaced ratio + how many
   surfaced items had a free full-text link). Feedback links arrive in M4.
 - The `week_in_brief` masthead blurb is short synthesis prose the session supplies to the
