@@ -1,0 +1,392 @@
+<!--
+  DESIGN REFERENCE — not the live template. This is a real digest generated in a
+  Claude Code session (July 2026) from the interim corpus, kept as the quality/design
+  bar for M3. Turn THIS into templates/digest.html.j2 (parameterize the content, keep
+  the tokens + both themes). See docs/08_HANDOFF_DIGEST.md §5.
+-->
+<title>Anesthesia Intelligence — Weekly Digest</title>
+<style>
+  :root {
+    --ground: #fbfcfd;
+    --surface: #ffffff;
+    --ink: #17212b;
+    --muted: #59636d;
+    --faint: #8a949d;
+    --accent: #0d6a68;
+    --accent-soft: #0d6a681a;
+    --hairline: #e4e8ec;
+    --grade-a: #1f8a5b;
+    --grade-b: #2f6fc4;
+    --grade-c: #b3791f;
+    --grade-d: #6b7480;
+    --ft: #0d6a68;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0f1519;
+      --surface: #161e24;
+      --ink: #e9eef2;
+      --muted: #9aa6b0;
+      --faint: #6f7b85;
+      --accent: #55c8c2;
+      --accent-soft: #55c8c21f;
+      --hairline: #263038;
+      --grade-a: #4fbe86;
+      --grade-b: #6ba6e6;
+      --grade-c: #d6a24e;
+      --grade-d: #9aa6b0;
+      --ft: #55c8c2;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #fbfcfd; --surface: #ffffff; --ink: #17212b; --muted: #59636d;
+    --faint: #8a949d; --accent: #0d6a68; --accent-soft: #0d6a681a; --hairline: #e4e8ec;
+    --grade-a: #1f8a5b; --grade-b: #2f6fc4; --grade-c: #b3791f; --grade-d: #6b7480; --ft: #0d6a68;
+  }
+  :root[data-theme="dark"] {
+    --ground: #0f1519; --surface: #161e24; --ink: #e9eef2; --muted: #9aa6b0;
+    --faint: #6f7b85; --accent: #55c8c2; --accent-soft: #55c8c21f; --hairline: #263038;
+    --grade-a: #4fbe86; --grade-b: #6ba6e6; --grade-c: #d6a24e; --grade-d: #9aa6b0; --ft: #55c8c2;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 660px; margin: 0 auto; padding: 32px 22px 64px; }
+
+  /* Masthead */
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 16px; }
+  .kicker {
+    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--accent); font-weight: 700;
+  }
+  .masthead h1 {
+    font-family: var(--serif); font-weight: 600; font-size: 30px; line-height: 1.1;
+    margin: 8px 0 6px; letter-spacing: -0.01em; text-wrap: balance;
+  }
+  .dateline {
+    font-size: 13px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .brief {
+    font-family: var(--serif); font-size: 17px; line-height: 1.5; color: var(--ink);
+    margin: 20px 0 0; padding-left: 14px; border-left: 3px solid var(--accent);
+  }
+  .brief b { font-weight: 600; }
+
+  /* Tier headers */
+  .tier { margin-top: 40px; }
+  .tier-head {
+    display: flex; align-items: baseline; gap: 10px;
+    border-bottom: 1px solid var(--hairline); padding-bottom: 6px; margin-bottom: 4px;
+  }
+  .tier-head .bar { width: 22px; height: 3px; background: var(--accent); border-radius: 2px; }
+  .tier-head h2 {
+    font-size: 12px; letter-spacing: 0.13em; text-transform: uppercase; font-weight: 700;
+    margin: 0; color: var(--ink);
+  }
+  .tier-head .count { font-size: 12px; color: var(--faint); font-variant-numeric: tabular-nums; }
+
+  /* Items */
+  .item { padding: 20px 0; border-bottom: 1px solid var(--hairline); }
+  .item:last-child { border-bottom: none; }
+  .item h3 {
+    font-family: var(--serif); font-weight: 600; font-size: 18px; line-height: 1.32;
+    margin: 0 0 8px; letter-spacing: -0.006em; text-wrap: pretty;
+  }
+  .item h3 a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+  .item h3 a:hover { border-bottom-color: var(--accent); }
+  .meta {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    font-size: 12.5px; color: var(--muted); margin-bottom: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .meta .journal { font-weight: 600; color: var(--ink); }
+  .meta .sep { color: var(--faint); }
+  .grade {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+    padding: 2px 7px; border-radius: 999px; border: 1px solid currentColor;
+    white-space: nowrap;
+  }
+  .grade small { font-weight: 500; letter-spacing: 0; opacity: 0.85; }
+  .g-A { color: var(--grade-a); } .g-B { color: var(--grade-b); }
+  .g-C { color: var(--grade-c); } .g-D { color: var(--grade-d); }
+  .ft {
+    font-size: 12px; font-weight: 600; color: var(--ft); text-decoration: none;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .ft::before { content: "↓"; font-weight: 700; }
+  .ft:hover { text-decoration: underline; }
+  .summary { font-size: 15px; line-height: 1.56; color: var(--ink); margin: 0; }
+  .summary .caveat { color: var(--muted); }
+
+  /* FYI compact */
+  .fyi-item { padding: 12px 0; border-bottom: 1px solid var(--hairline); }
+  .fyi-item:last-child { border-bottom: none; }
+  .fyi-item a { color: var(--ink); text-decoration: none; font-weight: 500; }
+  .fyi-item a:hover { text-decoration: underline; }
+  .fyi-line { font-size: 13.5px; }
+  .fyi-tag {
+    font-size: 11px; font-weight: 700; padding: 1px 5px; border-radius: 4px;
+    border: 1px solid currentColor; margin-right: 7px; vertical-align: 1px;
+  }
+  .fyi-note { color: var(--muted); font-size: 13px; }
+
+  /* Footer */
+  .footer {
+    margin-top: 44px; padding-top: 16px; border-top: 2px solid var(--ink);
+    font-size: 12.5px; color: var(--muted); line-height: 1.6;
+  }
+  .footer .metric { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .footer .build {
+    margin-top: 12px; font-size: 11.5px; color: var(--faint);
+    background: var(--accent-soft); padding: 10px 12px; border-radius: 8px;
+  }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="kicker">Anesthesia Intelligence</div>
+    <h1>Weekly Digest</h1>
+    <div class="dateline">
+      <span>July 23, 2026</span><span class="sep">·</span>
+      <span>21-day window</span><span class="sep">·</span>
+      <span>Private practice · general OR, ortho/regional</span>
+    </div>
+    <p class="brief">
+      A regional-and-orthopedics week, squarely in your wheelhouse. The headline is a new
+      <b>ASRA statement on gastric ultrasound for aspiration risk</b> — a concrete answer to the
+      GLP-1 fasting question you track — alongside a <b>network meta-analysis on whether your blocks
+      prevent chronic postsurgical pain</b> and an RCT testing <b>remimazolam against propofol for
+      delirium</b> in older patients. Two ACL-block trials and a pulse-pressure/AKI signal round out
+      a week with real signal and little noise.
+    </p>
+  </header>
+
+  <!-- PRACTICE CHANGING -->
+  <section class="tier">
+    <div class="tier-head"><span class="bar"></span><h2>Practice-changing</h2><span class="count">3</span></div>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/40250977/">ASRA expert practice recommendations: gastric point-of-care ultrasound to assess aspiration risk in medically complex patients</a></h3>
+      <div class="meta">
+        <span class="journal">Reg Anesth Pain Med</span><span class="sep">·</span>
+        <span>Society recommendations</span><span class="sep">·</span><span>Jul 6</span>
+        <span class="grade g-A">A <small>guideline</small></span>
+        <a class="ft" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC13205574/">Free full text</a>
+      </div>
+      <p class="summary">
+        ASRA-PM issues PRISMA-based expert recommendations for gastric POCUS to assess aspiration risk
+        in medically complex patients — exactly the GLP-1 and comorbid population you block. It positions
+        antral ultrasound as the risk-stratification tool where ASA fasting guidance (written for healthy
+        patients) doesn't fit, letting you image rather than reflexively delay or secure the airway. For a
+        community generalist doing regional, this is an actionable answer to the aspiration debate you can
+        adopt now. <span class="caveat">Journal club will press on inter-rater reliability and where the
+        qualitative "full stomach" threshold actually sits.</span>
+      </p>
+    </article>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/42425794/">Regional anaesthesia and chronic postsurgical pain: a systematic review and network meta-analysis</a></h3>
+      <div class="meta">
+        <span class="journal">Br J Anaesth</span><span class="sep">·</span>
+        <span>Network meta-analysis of RCTs</span><span class="sep">·</span><span>Jul 9</span>
+        <span class="grade g-A">A <small>NMA of RCTs</small></span>
+      </div>
+      <p class="summary">
+        A PRISMA network meta-analysis asks whether your blocks do more than control acute pain — whether
+        they reduce chronic postsurgical pain and long-term opioid use, and which techniques matter most.
+        That reframes the regional-vs-none conversation from PACU comfort to a durable outcome your
+        orthopedic patients care about. If the effect holds, it strengthens the case for a block in the
+        populations where you currently decide case-by-case. <span class="caveat">Watch the between-trial
+        heterogeneity and how loosely "regional" was pooled across very different techniques.</span>
+      </p>
+    </article>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/42464898/">Remimazolam vs propofol for delirium in older patients recovering from lung resection: a randomised non-inferiority trial</a></h3>
+      <div class="meta">
+        <span class="journal">Anaesthesia</span><span class="sep">·</span>
+        <span>RCT, non-inferiority, n=455</span><span class="sep">·</span><span>Jul 17</span>
+        <span class="grade g-B">B <small>single RCT</small></span>
+      </div>
+      <p class="summary">
+        Remimazolam is spreading as a propofol alternative, but its benzodiazepine lineage revives the
+        midazolam-delirium worry. This RCT tests non-inferiority for postoperative delirium in older
+        patients — directly relevant as you weigh remimazolam for an aging general-OR population. A clean
+        non-inferiority result removes a real hesitation; a signal toward more delirium is a reason to keep
+        propofol in the elderly. <span class="caveat">Single-centre generalizability and the chosen
+        non-inferiority margin are the questions to bring to journal club.</span>
+      </p>
+    </article>
+  </section>
+
+  <!-- WORTH KNOWING -->
+  <section class="tier">
+    <div class="tier-head"><span class="bar"></span><h2>Worth knowing</h2><span class="count">10</span></div>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/40055004/">Femoral triangle + iPACK vs femoral triangle block alone for ACL reconstruction</a></h3>
+      <div class="meta">
+        <span class="journal">Reg Anesth Pain Med</span><span class="sep">·</span>
+        <span>RCT, n=90</span><span class="sep">·</span><span>Jul 6</span>
+        <span class="grade g-B">B <small>single RCT</small></span>
+      </div>
+      <p class="summary">Your exact block practice: does adding an iPACK for posterior-knee coverage cut
+        opioid consumption after ACLR? A modest single-centre RCT on the technique choice you make routinely.</p>
+    </article>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/42481165/">Continuous femoral vs adductor canal block for ACL surgery</a></h3>
+      <div class="meta">
+        <span class="journal">Reg Anesth Pain Med</span><span class="sep">·</span>
+        <span>RCT, n=60</span><span class="sep">·</span><span>Jul 21</span>
+        <span class="grade g-B">B <small>small RCT</small></span>
+      </div>
+      <p class="summary">The motor-sparing-vs-block-density tradeoff you weigh for ACL: a double-blind
+        superiority trial of continuous femoral vs adductor canal catheters on opioid-sparing and function.</p>
+    </article>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/42469101/">GA vs GA + regional for major orthopaedic surgery: functional outcomes</a></h3>
+      <div class="meta">
+        <span class="journal">Br J Anaesth</span><span class="sep">·</span>
+        <span>Target-trial emulation, claims data</span><span class="sep">·</span><span>Jul 17</span>
+        <span class="grade g-C">C <small>observational</small></span>
+      </div>
+      <p class="summary">Adds an activities-of-daily-living angle to your regional-vs-GA question in ortho.
+        Observational (Japanese claims), so it strengthens rather than settles — useful context after REGAIN/RAGA.</p>
+    </article>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/42425699/">Bilateral erector spinae plane blocks for reduction mammoplasty</a></h3>
+      <div class="meta">
+        <span class="journal">Reg Anesth Pain Med</span><span class="sep">·</span>
+        <span>RCT, n=78</span><span class="sep">·</span><span>Jul 9</span>
+        <span class="grade g-B">B <small>single RCT</small></span>
+      </div>
+      <p class="summary">ESP block as a lower-risk alternative to paravertebral for breast surgery — relevant
+        opioid-sparing data if you cover mammoplasty cases in the ambulatory setting.</p>
+    </article>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/42479566/">Intraoperative narrow pulse pressure during normotension and postoperative AKI</a></h3>
+      <div class="meta">
+        <span class="journal">Anesthesiology</span><span class="sep">·</span>
+        <span>Retrospective cohort, n=30,039</span><span class="sep">·</span><span>Jul 17</span>
+        <span class="grade g-C">C <small>retrospective</small></span>
+      </div>
+      <p class="summary">Feeds your intraop-BP / organ-protection question with a twist: normal MAP but a
+        <em>narrow pulse pressure</em> tied to postoperative AKI. Large-n but retrospective — hypothesis-generating,
+        not a target to chase yet.</p>
+    </article>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/42411380/">Preoperative health-status scales vs the RCRI for postoperative MACCE in older patients</a></h3>
+      <div class="meta">
+        <span class="journal">Eur J Anaesthesiol</span><span class="sep">·</span>
+        <span>Retrospective multicentre, n=7,996</span><span class="sep">·</span><span>Jul 7</span>
+        <span class="grade g-C">C <small>retrospective</small></span>
+      </div>
+      <p class="summary">Directly your PAT cardiac-risk workflow: do frailty/health-status scales add predictive
+        value beyond the Revised Cardiac Risk Index? Practical for how you screen older patients preoperatively.</p>
+    </article>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/42399190/">Single-dose intraoperative methadone and the QTc interval</a></h3>
+      <div class="meta">
+        <span class="journal">Br J Anaesth</span><span class="sep">·</span>
+        <span>Prospective observational, n=282</span><span class="sep">·</span><span>Jul 3</span>
+        <span class="grade g-C">C <small>observational</small></span>
+      </div>
+      <p class="summary">A safety data point as intraoperative methadone use grows: does a single induction dose
+        meaningfully prolong QTc? Reassurance-or-caution for adding it to your general-OR multimodal plan.</p>
+    </article>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/42385730/">Residual gastric contents in GLP-1 users: the confounding role of diabetic gastric dysmotility</a></h3>
+      <div class="meta">
+        <span class="journal">Anesth Analg</span><span class="sep">·</span>
+        <span>Editorial / commentary</span><span class="sep">·</span><span>Aug 1</span>
+        <span class="grade g-D">D <small>commentary</small></span>
+      </div>
+      <p class="summary">Reframes the GLP-1 aspiration signal: is retained gastric content the drug, or underlying
+        diabetic gastroparesis? A useful counterweight to alarmist readings. <span class="caveat">Kept above FYI
+        because GLP-1 perioperative management is a pinned standing question.</span></p>
+    </article>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/42478292/">Concomitant beta-blocker therapy, intraoperative dexmedetomidine, and postoperative cardiac events in older patients</a></h3>
+      <div class="meta">
+        <span class="journal">Anaesthesia</span><span class="sep">·</span>
+        <span>Secondary analysis</span><span class="sep">·</span><span>Jul 21</span>
+        <span class="grade g-C">C <small>secondary analysis</small></span>
+      </div>
+      <p class="summary">Touches the lingering perioperative beta-blockade controversy from a new angle — the
+        interaction with intraoperative dexmedetomidine on cardiac events. Hypothesis-level, but on a question you follow.</p>
+    </article>
+
+    <article class="item">
+      <h3><a href="https://pubmed.ncbi.nlm.nih.gov/40015722/">Multi-society guideline: use and safety of corticosteroid injections in joints and soft tissue</a></h3>
+      <div class="meta">
+        <span class="journal">Reg Anesth Pain Med</span><span class="sep">·</span>
+        <span>ASRA/AAPM/ASIPP/IPSIS guideline</span><span class="sep">·</span><span>Jul 6</span>
+        <span class="grade g-A">A <small>guideline</small></span>
+        <a class="ft" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC13253915/">Free full text</a>
+      </div>
+      <p class="summary">Track-only for you (you're not doing injections now), but a fellowship-trained observer
+        should know it moved: the recommended effective corticosteroid doses are <em>lower</em> than what's commonly
+        used. Good journal-club and hallway currency.</p>
+    </article>
+  </section>
+
+  <!-- FYI -->
+  <section class="tier">
+    <div class="tier-head"><span class="bar"></span><h2>FYI</h2><span class="count">11</span></div>
+
+    <div class="fyi-item"><div class="fyi-line"><span class="fyi-tag g-B">B</span><a href="https://pubmed.ncbi.nlm.nih.gov/42449228/">Opioid-free vs opioid-inclusive anesthesia for PONV in VATS: meta-analysis</a> <span class="fyi-note">— procedure-specific OFA signal; evidence base still thin.</span></div></div>
+
+    <div class="fyi-item"><div class="fyi-line"><span class="fyi-tag g-B">B</span><a href="https://pubmed.ncbi.nlm.nih.gov/42402498/">APSF 2024 Stoelting Conference: perioperative medication-safety consensus</a> <span class="fyi-note">— APSF safety recommendations; worth a skim for systems changes.</span></div></div>
+
+    <div class="fyi-item"><div class="fyi-line"><span class="fyi-tag g-B">B</span><a href="https://pubmed.ncbi.nlm.nih.gov/42449236/">Intertransverse process & modified TLIP blocks for lumbar disc surgery: RCT</a> <span class="fyi-note">— another fascial-plane block trial; small n.</span></div></div>
+
+    <div class="fyi-item"><div class="fyi-line"><span class="fyi-tag g-C">C</span><a href="https://pubmed.ncbi.nlm.nih.gov/42431771/">Cognitive prehabilitation in surgical patients: scoping review</a> <span class="fyi-note">— delirium-prevention angle; still immature.</span></div></div>
+
+    <div class="fyi-item"><div class="fyi-line"><span class="fyi-tag g-C">C</span><a href="https://pubmed.ncbi.nlm.nih.gov/42442345/">Machine-learning postoperative delirium prediction from heart-rate variability</a> <span class="fyi-note">— prospective, n=1,418; early-stage model.</span></div></div>
+
+    <div class="fyi-item"><div class="fyi-line"><span class="fyi-tag g-C">C</span><a href="https://pubmed.ncbi.nlm.nih.gov/42469102/">A universal anaesthesiological core across ERAS Society guidelines</a> <span class="fyi-note">— systematic distillation of what's common to ERAS pathways.</span></div></div>
+
+    <div class="fyi-item"><div class="fyi-line"><span class="fyi-tag g-C">C</span><a href="https://pubmed.ncbi.nlm.nih.gov/42018768/">Extended-release opioid dispensing after total joint arthroplasty</a> <span class="fyi-note">— prescribing-pattern data; EROs still used despite guidance against.</span></div></div>
+
+    <div class="fyi-item"><div class="fyi-line"><span class="fyi-tag g-C">C</span><a href="https://pubmed.ncbi.nlm.nih.gov/40096994/">Accuracy of patient-reported opioid use vs verified prescription fills</a> <span class="fyi-note">— multicentre; relevant to how you counsel and chart.</span> <a class="ft" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12353900/">Free full text</a></div></div>
+
+    <div class="fyi-item"><div class="fyi-line"><span class="fyi-tag g-C">C</span><a href="https://pubmed.ncbi.nlm.nih.gov/42359695/">Post-block hypersensitivity (rebound pain) after axillary block: QST in volunteers</a> <span class="fyi-note">— mechanistic look at rebound pain you see clinically.</span></div></div>
+
+    <div class="fyi-item"><div class="fyi-line"><span class="fyi-tag g-D">D</span><a href="https://pubmed.ncbi.nlm.nih.gov/40169358/">Building blocks for novices in pediatric regional anesthesia</a> <span class="fyi-note">— educational; useful for your occasional peds cases.</span> <a class="ft" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12621554/">Free full text</a></div></div>
+
+    <div class="fyi-item"><div class="fyi-line"><span class="fyi-tag g-D">D</span><a href="https://pubmed.ncbi.nlm.nih.gov/42383308/">Precision anaesthesia: a paradigm shift?</a> <span class="fyi-note">— perspective piece; big-picture framing, no new data.</span></div></div>
+  </section>
+
+  <footer class="footer">
+    <div><span class="metric">817 items screened · 24 surfaced (2.9%)</span> across a 21-day window.
+      Free full-text links found for 4 of 24 surfaced items (PMC).</div>
+    <div>Sources OK: PubMed. FDA + society feeds not yet ingested (Step 4). Feedback links arrive in M4.</div>
+    <div class="build">
+      <b>Build note.</b> This is a demonstration digest generated in a Claude Code session from the current
+      interim corpus (<code>data/untriaged.jsonl</code>) — no database, no API key, no email sent. Triage +
+      synthesis here were done to prove the loop end-to-end; the automated <code>/digest</code> triage
+      (M2) and Resend email delivery (M3) aren't built yet. Free full-text coverage is PMC-only for now
+      (Unpaywall needs a contact email set); it will rise once <code>UNPAYWALL_EMAIL</code> is configured.
+    </div>
+  </footer>
+</div>

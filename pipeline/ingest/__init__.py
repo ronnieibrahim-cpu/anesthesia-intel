@@ -28,6 +28,11 @@ class RawItem:
     url: str
     published_on: str | None = None  # ISO date string when the source provides one
     journal: str | None = None
+    journal_abbrev: str | None = None  # NLM Title Abbreviation (PubMed ISOAbbreviation);
+                                        # the reliable field for Tier A/B matching —
+                                        # journal (full title) varies in formatting
+                                        # (e.g. "Lancet (London, England)") in ways
+                                        # that break fuzzy matching against config.
     abstract: str | None = None
     doi: str | None = None
     pmid: str | None = None

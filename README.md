@@ -6,9 +6,17 @@ See `docs/07_START_HERE_SETUP_GUIDE.md` for setup and the weekly workflow, and `
 
 ## Status
 
-**Milestone M1, Step 2 complete:** database schema (dbmate migrations for `sources`,
-`items`, `digests`, `scores`, `digest_items`, `feedback`, `eval_labels`). Next: Step 3 —
-`pipeline/ingest/pubmed.py`.
+**Next up — Milestones M2/M3 (`/digest`):** see **`docs/08_HANDOFF_DIGEST.md`** for the full
+handoff to build the working `/digest` command (triage → synthesis → preview → send). The
+target output design is `templates/digest.sample.html` (a real generated digest).
+
+**Milestone M1, Step 3 complete:** PubMed ingester (`pipeline/ingest/pubmed.py`) driven by
+`config/sources.yaml` (Tier A journal allowlist + standing-question topic queries), with
+fixture-based tests and no live network calls. Plus an interim, DB-optional
+`run_daily --to-file` path (`make ingest-file`) that appends pre-filtered, compressed
+items to the accumulating `data/untriaged.jsonl` for `/digest` to read while
+`DATABASE_URL` is unresolved (ADR 0001). Lookback window widened to 21 days by default,
+with a cross-run seen-ledger so the overlap doesn't reprocess items (ADR 0002). Tier-B keyword pre-filtering (ADR 0003) and lawful open-access full-text enrichment (Unpaywall + PMC, `pipeline/enrich.py`) are implemented; the digest spec now requires a summary, an evidence grade (A-D), and a "Free full text" link per surfaced item. Next: Step 4 remainder — `fda.py`, `rss.py`, and DB-backed dedupe/persistence.
 
 ## Local development
 
@@ -33,7 +41,8 @@ the schema: add a new numbered migration file, never edit a merged one.
 | `make doctor` | environment + billing-guardrail check | now |
 | `make test` | run tests | now |
 | `make migrate` | apply database migrations | now |
-| `make ingest` | run one day's ingestion locally | Step 5 |
+| `make ingest-file` | ingest to `data/week-<today>.jsonl`, no DB (interim, ADR 0001) | now |
+| `make ingest` | run one day's ingestion into the DB | Step 5 |
 | `make backfill DAYS=90` | supervised historical backfill | Step 5 |
 | `make eval` | score the labeled eval set (run in a Claude Code session) | M2 |
 | `/digest` (in Claude Code) | weekly triage → synthesis → preview → send | M2–M3 |
