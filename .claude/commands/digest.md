@@ -12,6 +12,21 @@ behavioral spec. Arguments: `$ARGUMENTS` (supports `--dry-run`).
 **Implementers:** read `docs/08_HANDOFF_DIGEST.md` first (milestone plan, what's built vs
 stub, Sonnet-subagent strategy). The output design bar is `templates/digest.sample.html`.
 
+## The single-command flow (what to run, in order)
+
+A fresh session starts empty (the repo is re-cloned; `data/` is gitignored). This one
+command sheet fetches, triages, synthesizes, and renders — the founder types only `/digest`.
+
+0. **Ensure the corpus** — if `data/untriaged.jsonl` is missing (fresh session) or the
+   founder wants a fresh pull, run `make ingest-file`. It fetches the last ~21 days from
+   PubMed and enriches OA links — deterministic, no DB, no API key, ~a few hundred items.
+1. **Triage** (Phase 1) → write `data/scores.jsonl`.
+2. **Synthesize** (Phase 2) the surviving items → write `data/synthesis.jsonl`.
+3. **Render** → `python -m pipeline.digest_render --screened <N> [--brief "…"]` writes
+   `data/digest-<today>.html`. Show it to the founder (Phase 3).
+
+The steps below are the authoritative detail for each phase.
+
 ## Preamble (always, before any phase)
 
 1. Read `CLAUDE.md` (hard rules), `PRACTICE_PROFILE.md` (the rubric — apply literally),
@@ -31,19 +46,22 @@ stub, Sonnet-subagent strategy). The output design bar is `templates/digest.samp
    `items` table; the file remains an offline fallback. After a real triage pass,
    clear consumed lines from this file (M2/M3 concern — not yet automated).
 
-## Phase 1 — Triage (M2) — TODO
+## Phase 1 — Triage (M2) — BUILT
 
 - Switch to the triage model from `config/models.yaml`.
-- Read items with `prefilter = 'passed'` and no current score, within the coverage window.
-- Batch them via `llm/batching.py` (~25 items of compressed metadata per batch).
-- Score each batch against the current `prompts/triage-vN.md` + PRACTICE_PROFILE.md.
-  Output per item, strict JSON: `relevance_tier` (practice_changing | worth_knowing |
-  fyi | noise), `evidence_grade` (A|B|C|D — see scale below; stored in the
-  `scores.evidence_level` column), `one_line_takeaway`, `reasoning`, `topics[]`,
-  `confidence`.
+- Read the pre-filtered items from `data/untriaged.jsonl` (the interim source; each line is
+  already the compressed, `prefilter='passed'` triage shape), within the coverage window.
+- Batch them via `llm/batching.make_batches()` (~25 items per batch, size from
+  `config/settings.yaml` budget.triage_batch_size).
+- Score each batch against `prompts/triage-v1.md` + PRACTICE_PROFILE.md. Output per item,
+  strict JSON: `relevance_tier` (practice_changing | worth_knowing | fyi | noise),
+  `evidence_level` (A|B|C|D — see scale below), `one_line_takeaway`, `reasoning`,
+  `topics[]`, `confidence`.
 - Be **inclusive**: torn between noise and FYI → FYI. Nothing recovers a false noise.
-- Write scores via `llm/scores.py` (append-only rows recording model + prompt version +
-  profile version; model string `claude-code-session/<model>`).
+- Validate + write with `llm/scores.py`: `validate()` each item (rejects malformed JSON
+  loudly), then `write_scores_to_file("data/scores.jsonl", …, model, "triage-v1",
+  <profile_version>)` (append-only; latest-per-pmid wins). When the DB is reachable,
+  `write_scores(conn, …)` writes the `scores` table instead.
 - **Acceptance (M2 gate):** ≥90% practice-changing recall, ≥80% tier agreement on the
   eval set; one week's volume triaged comfortably in a single Pro session.
 
@@ -108,11 +126,12 @@ be token-frugal. The design already does most of the work; the session should ho
 
 ## Phase 3 — Preview → confirm → send
 
-**Preview-to-file — BUILT.** `pipeline/digest_render.build_from_files(...)` writes the
-rendered HTML to disk (e.g. `data/digest-<date>.html`, gitignored) for the founder to open
-and read. Accept conversational edits in-session ("demote item 4", "drop item 2") by
-adjusting the synthesis/score inputs and re-rendering — the render step is free and
-deterministic, so iterate freely before any send.
+**Preview-to-file — BUILT.** Run `python -m pipeline.digest_render --screened <N>`
+(optionally `--brief "…"` for the masthead blurb); it reads `data/untriaged.jsonl` +
+`data/scores.jsonl` + `data/synthesis.jsonl` and writes `data/digest-<today>.html`
+(gitignored) for the founder to open and read. Accept conversational edits in-session
+("demote item 4", "drop item 2") by adjusting the synthesis/score inputs and re-rendering —
+the render step is free and deterministic, so iterate freely before any send.
 
 **Email send — DEFERRED (founder chose preview-to-file first).** When the founder wants
 real delivery: add a `pipeline/send.py` (Resend API) with `--dry-run` support and the

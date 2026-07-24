@@ -5,12 +5,17 @@ Fixture-free — records are built inline as plain dicts. No network, no LLM cal
 just supply already-produced JSON-shaped dicts).
 """
 
+import datetime
+import json
+
 from pipeline.digest_render import (
     apply_caps,
     build_context,
     format_date,
+    main,
     merge_item,
     render_html,
+    _default_display_date,
 )
 
 CAPS = {"practice_changing": 5, "worth_knowing": 12, "fyi": 15}
@@ -243,3 +248,47 @@ def test_render_html_footer_ratio_string():
 def test_render_html_dark_theme_css_present():
     html = render_html(_small_context())
     assert "prefers-color-scheme: dark" in html
+
+
+# ---- CLI ------------------------------------------------------------------------
+
+def test_default_display_date_formats_without_leading_zero():
+    assert _default_display_date(datetime.date(2026, 7, 4)) == "July 4, 2026"
+
+
+def _write_jsonl(path, rows):
+    path.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+
+
+def test_main_renders_from_files_end_to_end(tmp_path):
+    items = tmp_path / "items.jsonl"
+    scores = tmp_path / "scores.jsonl"
+    synth = tmp_path / "synth.jsonl"
+    out = tmp_path / "digest.html"
+    _write_jsonl(items, [
+        {"pmid": "1", "title": "A trial", "journal": "NEJM", "date": "2026-07-06",
+         "design": "rct", "n": 200, "oa_url": "https://example.org/pmc/1"},
+        {"pmid": "2", "title": "Noise item", "journal": "Other"},
+    ])
+    _write_jsonl(scores, [
+        {"pmid": "1", "relevance_tier": "practice_changing", "evidence_level": "A",
+         "one_line_takeaway": "x"},
+        {"pmid": "2", "relevance_tier": "noise", "evidence_level": "D",
+         "one_line_takeaway": "drop me"},
+    ])
+    _write_jsonl(synth, [
+        {"pmid": "1", "design_line": "RCT, n=200", "grade_label": "single RCT",
+         "summary": "s", "practice_impact": "p", "field_impact": "f",
+         "future_considerations": "c"},
+    ])
+
+    result = main([
+        "--items", str(items), "--scores", str(scores), "--synthesis", str(synth),
+        "--out", str(out), "--date", "July 24, 2026", "--screened", "817",
+    ])
+    assert result == out
+    html = out.read_text(encoding="utf-8")
+    assert "July 24, 2026" in html
+    assert "A trial" in html            # scored, non-noise -> surfaced
+    assert "Noise item" not in html     # noise -> excluded
+    assert "817 items screened" in html
