@@ -155,3 +155,38 @@ binding requirements; roadmap M2/M3 deliverables reference the handoff, the A-D 
 sample template, and the DB-optional reality. No code changed; 47 tests still green. Next:
 a fresh Opus session picks up docs/08_HANDOFF_DIGEST.md and starts M2 (triage prompt +
 batching + scores + eval harness), pending the founder's eval-label set and tiering decision.
+
+## 2026-07-24 — M2: triage layer (prompt + batching + scores + eval harness)
+Built the M2 deliverables from docs/08_HANDOFF_DIGEST.md §4. Merged the completed M1
+(claude/m1-step3-pubmed) into main first — it carried Step 3 + ADRs 0001-0003 + the handoff
+and had never landed on main (main only had Steps 1-2); verified green (47 tests, ruff, make
+doctor) before merging. Then, on top of it:
+- prompts/triage-v1.md got its real body (was a placeholder awaiting M2). Injects
+  PRACTICE_PROFILE.md by reference (not restated — §7 applied literally), takes the compact
+  compressed-item shape, emits a strict per-item JSON array (relevance_tier, evidence_level
+  A-D, one_line_takeaway, reasoning, topics[], confidence). Bakes in the three easy-to-miss
+  rules: inclusive at the margin (torn noise/fyi -> fyi), Tier A never auto-noised (§8),
+  retrospective n<30 floored at FYI (§6). Evidence grade derived from design/n/type per the
+  A-D scale in .claude/commands/digest.md, independent of topic appeal.
+- llm/batching.make_batches(): simple chunking to config/settings.yaml budget.triage_batch_size
+  (~25); loud ValueError on a non-positive size. llm/scores.py: validate() rejects malformed
+  triage JSON loudly (names the offending pmid), normalizes (str pmid, upper-cased grade,
+  2dp confidence); two append-only sinks sharing that shape — write_scores(conn,...) for the
+  Postgres scores table (resolves item_id by pmid, flips is_current, records
+  model/prompt/profile) and write_scores_to_file()/load_current_scores() for the interim disk
+  path while DATABASE_URL is unresolved (handoff §6). The DB path is unit-tested against a
+  fake connection (no live DB in the suite, docs/02 §8).
+- evalset/run_eval.py + `make eval`: a PURE comparator (no model call). The /digest session
+  writes predictions to evalset/predictions.jsonl (gitignored, derived); this reads them vs
+  evalset/labels.csv and reports practice-changing recall (primary; a missing prediction is
+  an honest miss), tier agreement over scored items, and a 4x4 confusion matrix, with the M2
+  gate (>=90% recall, >=80% agreement) shown as PASS/BELOW banners — informational, since the
+  founder decides "fix profile or prompt?".
+Verified: 94 tests pass (47 new: batching/scores/eval), ruff clean, make doctor OK. Ran the
+eval harness end-to-end on synthetic (non-founder) data to confirm the report renders.
+OPEN / founder tasks (surfaced, not fabricated): (1) evalset/labels.csv is still header-only
+— the gate is BLOCKED until the founder hand-labels ~100-150 items (leftover M0, handoff
+§4.3); `make eval` prints exactly this. (2) The general-journal Tier-A tiering decision (ADR
+0003) and the 21-vs-32-day window (ADR 0002) remain the founder's calls. Next: run the real
+eval once labels exist (record the delta in triage-v1's changelog per rule 5, iterate profile
+-first), then M3 (synthesis prompt + Jinja template + Resend send).
