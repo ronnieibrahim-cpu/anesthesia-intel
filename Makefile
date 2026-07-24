@@ -52,8 +52,8 @@ migrate:  ## Apply db/migrations to DATABASE_URL via dbmate (installs dbmate if 
 	fi; \
 	dbmate --no-dump-schema up
 
-eval:  ## Score the labeled eval set; report recall/agreement/confusion — M2
-	@echo "Not implemented until Milestone M2 (evalset/run_eval.py)."; exit 1
+eval:  ## Compare triage predictions to founder labels; report recall/agreement/confusion — M2
+	uv run python -m evalset.run_eval
 
 deep-dive:  ## Structured brief for PMID=... (manual-assist) — M4
 	@echo "Not implemented until Milestone M4 (deep-dive manual assist)."; exit 1

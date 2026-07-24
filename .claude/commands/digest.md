@@ -4,10 +4,10 @@ description: Weekly digest — triage the week's pre-filtered items against PRAC
 
 # /digest — the Monday session
 
-**Status: SKELETON — this file is the authoritative behavioral spec; the command is not
-built yet.** Phase 1 is implemented in Milestone M2; Phases 2–3 in M3. This file defines
-the structure so later sessions fill in slots instead of re-deciding architecture.
-Arguments: `$ARGUMENTS` (supports `--dry-run`).
+**Status: BUILT through preview-to-file.** Phase 1 (triage) is implemented (M2); Phase 2
+(synthesis + deterministic render) and Phase 3 *preview-to-file* are implemented (M3); the
+Phase 3 *email send* (Resend) is deferred by founder choice. This file is the authoritative
+behavioral spec. Arguments: `$ARGUMENTS` (supports `--dry-run`).
 
 **Implementers:** read `docs/08_HANDOFF_DIGEST.md` first (milestone plan, what's built vs
 stub, Sonnet-subagent strategy). The output design bar is `templates/digest.sample.html`.
@@ -63,26 +63,29 @@ GRADE certainty and to the PRACTICE_PROFILE.md §7 rubric:
 State the grade honestly — an eye-catching topic with grade C/D evidence is still C/D,
 and the synthesis should say so (that is exactly the journal-club caveat the founder wants).
 
-## Phase 2 — Synthesis (M3) — TODO
+## Phase 2 — Synthesis (M3) — BUILT (preview-to-file; email is Phase 3, deferred)
 
 - Switch to the synthesis model from `config/models.yaml` (strongest available).
-- Take surviving items (practice_changing / worth_knowing / fyi).
-- Enforce caps from `config/settings.yaml` (≤5 / ≤12 / ≤15) by **demoting**, never expanding.
-- **Every surfaced item shows three things (binding, founder requirement):**
-  1. A **2–4 sentence summary** per `prompts/synthesis-vN.md` — written against the
-     founder's practice, academic-appointment voice, key caveat last. (FYI items get the
-     one-line takeaway rather than the full summary; practice_changing / worth_knowing get
-     the full 2–4 sentences.)
-  2. Its **evidence grade** (A–D from Phase 1), shown inline next to the design/n line, so
-     the strength of evidence is visible at a glance, not buried in prose.
-  3. A **"Free full text" link whenever `oa_url` is present.** Maximizing this coverage is
-     a goal: the daily pipeline already enriches every passed item via Unpaywall + PMC
-     (`pipeline/enrich.py`), so the link is shown for every item that has a lawful
-     open-access copy. Never link to or imply a paywalled/circumvented full text
-     (CLAUDE.md rule 2) — abstract-only when no `oa_url` exists.
-- Render `templates/digest.html.j2` (the "Free full text" links, the evidence grade,
-  feedback links, and the pipeline-health footer with screened→surfaced ratio — plus, in
-  the footer, how many surfaced items had a free full-text link, so OA coverage is visible).
+- Take surviving items (practice_changing / worth_knowing / fyi — never noise).
+- Score each with `prompts/synthesis-v1.md`: it returns, per item (strict JSON keyed by
+  pmid), a **four-part brief** — `summary`, `practice_impact` (the founder's own practice),
+  `field_impact` (anesthesia broadly), `future_considerations` (caveat last) — plus two
+  short display descriptors (`design_line`, `grade_label`). Write the array to a JSONL the
+  renderer reads (e.g. `data/synthesis.jsonl`, latest-per-pmid winning).
+- **Every surfaced item shows (binding, founder requirement):** the four-part write-up
+  above, its **evidence grade A–D** (from Phase 1) as an inline chip, and a **"Free full
+  text" link whenever `oa_url` is present** (abstract-only otherwise — never a paywalled or
+  circumvented link, CLAUDE.md rule 2). FYI depth follows `config/settings.yaml`
+  `digest.fyi_writeup`: `full` gives FYI the same four-part brief (the founder's V1 choice),
+  `one_line` collapses FYI to its triage `one_line_takeaway`.
+- **Caps and rendering are deterministic — not the model's job.** `pipeline/digest_render.py`
+  merges item metadata + triage score + synthesis prose by pmid, enforces the
+  `config/settings.yaml` caps (≤5 / ≤12 / ≤15) by **demoting** the weakest overflow (never
+  expanding), and renders `templates/digest.html.j2` — the four-part blocks, grade chips,
+  "Free full text" links, and the pipeline-health footer (screened→surfaced ratio + how many
+  surfaced items had a free full-text link). Feedback links arrive in M4.
+- The `week_in_brief` masthead blurb is short synthesis prose the session supplies to the
+  renderer; the rest of the digest is assembled deterministically.
 
 ## Token-efficient operation (how to keep the weekly session cheap)
 
@@ -103,10 +106,18 @@ be token-frugal. The design already does most of the work; the session should ho
    is the lever: a corpus in the ~100–300/week target range triages in one comfortable
    pass. If a session ever strains limits, tighten filters — not the model, not the caps.
 
-## Phase 3 — Preview → confirm → send (M3) — TODO
+## Phase 3 — Preview → confirm → send
 
-- Show the rendered digest in the session for review; accept conversational edits
-  ("demote item 4", "expand item 2") and re-render.
-- On the founder's explicit "send": deliver via Resend, store the digest copy and its
-  item list in the `digests` / `digest_items` tables.
-- With `--dry-run`: stop after preview; state plainly that nothing was sent.
+**Preview-to-file — BUILT.** `pipeline/digest_render.build_from_files(...)` writes the
+rendered HTML to disk (e.g. `data/digest-<date>.html`, gitignored) for the founder to open
+and read. Accept conversational edits in-session ("demote item 4", "drop item 2") by
+adjusting the synthesis/score inputs and re-rendering — the render step is free and
+deterministic, so iterate freely before any send.
+
+**Email send — DEFERRED (founder chose preview-to-file first).** When the founder wants
+real delivery: add a `pipeline/send.py` (Resend API) with `--dry-run` support and the
+preview-then-confirm default (CLAUDE.md rule 6) — email is sent only after the founder
+explicitly replies "send". Needs `RESEND_API_KEY` and a confirmed recipient. Until then,
+`--dry-run` behavior is the whole command: render, preview, send nothing, say so plainly.
+On a real send (later), store the digest copy and item list in `digests` / `digest_items`
+once the DB is reachable; until then the on-disk HTML is the record.

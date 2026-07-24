@@ -155,3 +155,72 @@ binding requirements; roadmap M2/M3 deliverables reference the handoff, the A-D 
 sample template, and the DB-optional reality. No code changed; 47 tests still green. Next:
 a fresh Opus session picks up docs/08_HANDOFF_DIGEST.md and starts M2 (triage prompt +
 batching + scores + eval harness), pending the founder's eval-label set and tiering decision.
+
+## 2026-07-24 — M2: triage layer (prompt + batching + scores + eval harness)
+Built the M2 deliverables from docs/08_HANDOFF_DIGEST.md §4. Merged the completed M1
+(claude/m1-step3-pubmed) into main first — it carried Step 3 + ADRs 0001-0003 + the handoff
+and had never landed on main (main only had Steps 1-2); verified green (47 tests, ruff, make
+doctor) before merging. Then, on top of it:
+- prompts/triage-v1.md got its real body (was a placeholder awaiting M2). Injects
+  PRACTICE_PROFILE.md by reference (not restated — §7 applied literally), takes the compact
+  compressed-item shape, emits a strict per-item JSON array (relevance_tier, evidence_level
+  A-D, one_line_takeaway, reasoning, topics[], confidence). Bakes in the three easy-to-miss
+  rules: inclusive at the margin (torn noise/fyi -> fyi), Tier A never auto-noised (§8),
+  retrospective n<30 floored at FYI (§6). Evidence grade derived from design/n/type per the
+  A-D scale in .claude/commands/digest.md, independent of topic appeal.
+- llm/batching.make_batches(): simple chunking to config/settings.yaml budget.triage_batch_size
+  (~25); loud ValueError on a non-positive size. llm/scores.py: validate() rejects malformed
+  triage JSON loudly (names the offending pmid), normalizes (str pmid, upper-cased grade,
+  2dp confidence); two append-only sinks sharing that shape — write_scores(conn,...) for the
+  Postgres scores table (resolves item_id by pmid, flips is_current, records
+  model/prompt/profile) and write_scores_to_file()/load_current_scores() for the interim disk
+  path while DATABASE_URL is unresolved (handoff §6). The DB path is unit-tested against a
+  fake connection (no live DB in the suite, docs/02 §8).
+- evalset/run_eval.py + `make eval`: a PURE comparator (no model call). The /digest session
+  writes predictions to evalset/predictions.jsonl (gitignored, derived); this reads them vs
+  evalset/labels.csv and reports practice-changing recall (primary; a missing prediction is
+  an honest miss), tier agreement over scored items, and a 4x4 confusion matrix, with the M2
+  gate (>=90% recall, >=80% agreement) shown as PASS/BELOW banners — informational, since the
+  founder decides "fix profile or prompt?".
+Verified: 94 tests pass (47 new: batching/scores/eval), ruff clean, make doctor OK. Ran the
+eval harness end-to-end on synthetic (non-founder) data to confirm the report renders.
+OPEN / founder tasks (surfaced, not fabricated): (1) evalset/labels.csv is still header-only
+— the gate is BLOCKED until the founder hand-labels ~100-150 items (leftover M0, handoff
+§4.3); `make eval` prints exactly this. (2) The general-journal Tier-A tiering decision (ADR
+0003) and the 21-vs-32-day window (ADR 0002) remain the founder's calls. Next: run the real
+eval once labels exist (record the delta in triage-v1's changelog per rule 5, iterate profile
+-first), then M3 (synthesis prompt + Jinja template + Resend send).
+
+## 2026-07-24 — M3: synthesis + deterministic render (preview-to-file; email deferred)
+Built /digest through preview-to-file, per the founder's three product calls this session:
+(1) full four-part write-up for EVERY surfaced tier including FYI, (2) build the digest now
+and calibrate triage with eval labels afterward, (3) preview-to-file first, real email later.
+- prompts/synthesis-v1.md (real body): per surviving item, a strict-JSON four-part brief
+  keyed by pmid — summary, practice_impact (the founder's own practice), field_impact
+  (anesthesia broadly), future_considerations (caveat last) — plus two short display
+  descriptors (design_line, grade_label). Academic journal-club voice (PROFILE §9). Emits
+  only new prose (metadata/grade come from the item + triage) to stay token-frugal.
+- config/settings.yaml: digest.fyi_writeup (full | one_line) makes FYI depth a config knob,
+  not a code change — founder's V1 default is `full`.
+- pipeline/digest_render.py (new, deterministic — no LLM call): merges compressed item +
+  triage score + synthesis prose by pmid, enforces the settings caps (5/12/15) by DEMOTING
+  the weakest overflow (grade A>B>C>D, then original-tier weight, then recency; PC->WK->FYI,
+  FYI floor trims), computes the footer honesty metric (screened->surfaced + OA coverage),
+  and renders templates/digest.html.j2 to disk. Mirrors enrich.py's pure-logic/thin-I/O
+  split. build_from_files() reads the interim JSONL files (items/scores/synthesis), so it
+  works with no DATABASE_URL (ADR 0001).
+- templates/digest.html.j2: reproduces templates/digest.sample.html's design tokens and both
+  light/dark themes verbatim, extended with the four labeled parts (Summary / Your practice /
+  Anesthesia broadly / Looking ahead) and the compact FYI one_line mode. No feedback links
+  yet (M4). (Jinja gotcha handled: tier['items'] not tier.items, since dict.items() shadows.)
+- .claude/commands/digest.md: Phase 2/3 rewritten to the built preview-to-file behavior;
+  Phase 3 email send (Resend, new pipeline/send.py) explicitly DEFERRED by founder choice —
+  needs RESEND_API_KEY + a confirmed recipient when wanted.
+Work split per handoff §7: Opus wrote the synthesis prompt + data contract + command spec;
+a Sonnet subagent built the render layer (template + module + 21 tests) to that contract;
+overseer verified — read the diff, ran the suite, and rendered a real demo digest end-to-end
+through build_from_files before committing. 115 tests pass (21 new), ruff clean, doctor OK.
+DEFERRED / next: wire pipeline/send.py (Resend) when the founder wants live email; run the
+real `make eval` once the founder's labels land (still the M2 gate); persist sent digests to
+the DB once DATABASE_URL resolves. FYI-full is the token-hungriest setting — flip
+digest.fyi_writeup to one_line if a Monday session ever pinches.

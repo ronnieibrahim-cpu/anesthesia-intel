@@ -35,5 +35,21 @@ def compress(row: dict) -> dict:
 
 
 def make_batches(items, batch_size):
-    """Yield lists of compressed item dicts, `batch_size` at a time."""
-    raise NotImplementedError("Implemented in M2 (triage phase).")
+    """Yield lists of compressed item dicts, `batch_size` at a time.
+
+    `items` is any iterable of already-compressed dicts (see `compress()`); the
+    caller passes `config/settings.yaml` budget.triage_batch_size (~25) so a whole
+    week triages in a handful of batches inside one Pro session (docs/02 §3). The
+    last batch may be short. A non-positive batch size is a config error, not a
+    silent no-op, so it raises loudly.
+    """
+    if not isinstance(batch_size, int) or batch_size < 1:
+        raise ValueError(f"batch_size must be a positive integer, got {batch_size!r}")
+    batch: list[dict] = []
+    for item in items:
+        batch.append(item)
+        if len(batch) == batch_size:
+            yield batch
+            batch = []
+    if batch:
+        yield batch

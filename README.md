@@ -6,9 +6,27 @@ See `docs/07_START_HERE_SETUP_GUIDE.md` for setup and the weekly workflow, and `
 
 ## Status
 
-**Next up — Milestones M2/M3 (`/digest`):** see **`docs/08_HANDOFF_DIGEST.md`** for the full
-handoff to build the working `/digest` command (triage → synthesis → preview → send). The
-target output design is `templates/digest.sample.html` (a real generated digest).
+**Milestone M2 — triage layer built (gate pending founder labels):** the `/digest` triage
+phase now has real parts — `prompts/triage-v1.md` (scores each pre-filtered item against
+`PRACTICE_PROFILE.md` §7 into strict JSON: tier, A–D evidence grade, takeaway, reasoning,
+topics, confidence), `llm/batching.make_batches()`, `llm/scores.py` (`validate()` +
+append-only DB/file sinks), and `evalset/run_eval.py` wired to `make eval`
+(practice-changing recall, tier agreement, confusion matrix). **The M2 gate can't run until
+the founder hand-labels ~100–150 items into `evalset/labels.csv`** (a leftover-M0 task the
+harness surfaces; it never fabricates labels). Synthesis + send (M3) are still to build.
+
+**Milestone M3 — digest built through preview-to-file:** `/digest` now synthesizes a
+four-part brief per article (summary · impact on your practice · impact on anesthesia
+broadly · looking ahead), grades evidence A–D, and links free full text when a lawful
+open-access copy exists. `pipeline/digest_render.py` deterministically merges triage +
+synthesis, enforces the tier caps by demotion, and renders `templates/digest.html.j2`
+(reproducing the `digest.sample.html` design, both light/dark themes) **to a file to
+preview**. Real email delivery (Resend) is deferred by choice — a small follow-up when
+wanted. FYI write-up depth is a config knob (`config/settings.yaml` `digest.fyi_writeup`).
+
+**Still open:** the M2 triage gate awaits the founder's hand-labels
+(`evalset/labels.csv`); email send + DB persistence are the remaining M3 follow-ups. See
+**`docs/08_HANDOFF_DIGEST.md`**.
 
 **Milestone M1, Step 3 complete:** PubMed ingester (`pipeline/ingest/pubmed.py`) driven by
 `config/sources.yaml` (Tier A journal allowlist + standing-question topic queries), with
@@ -44,8 +62,8 @@ the schema: add a new numbered migration file, never edit a merged one.
 | `make ingest-file` | ingest to `data/week-<today>.jsonl`, no DB (interim, ADR 0001) | now |
 | `make ingest` | run one day's ingestion into the DB | Step 5 |
 | `make backfill DAYS=90` | supervised historical backfill | Step 5 |
-| `make eval` | score the labeled eval set (run in a Claude Code session) | M2 |
-| `/digest` (in Claude Code) | weekly triage → synthesis → preview → send | M2–M3 |
+| `make eval` | compare triage predictions to founder labels (recall/agreement/confusion) | now (needs labels) |
+| `/digest` (in Claude Code) | weekly triage → synthesis → preview → send | triage + synthesis + preview-to-file now; email send later |
 | `make deep-dive PMID=…` | structured brief for one paper | M4 |
 
 The weekly LLM work is deliberately **not** automated: `/digest` runs in an interactive

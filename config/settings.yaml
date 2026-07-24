@@ -7,6 +7,11 @@ digest:
     practice_changing: 5
     worth_knowing: 12
     fyi: 15
+  # How much write-up each FYI item gets (M3). "full" gives FYI the same four-part
+  # brief as the top tiers (comprehensive, more tokens/longer email — the founder's
+  # V1 choice); "one_line" collapses FYI to just its triage takeaway (leaner weekly
+  # session). Practice-changing and worth-knowing always get the full brief.
+  fyi_writeup: full   # full | one_line
   # Recipient/sender are configured at send time from environment, never stored here.
 
 ingestion:
